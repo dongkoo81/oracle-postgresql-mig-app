@@ -17,16 +17,16 @@ dnf install -y java-17-amazon-corretto-devel
 # Install PostgreSQL client
 dnf install -y postgresql16
 
-# Install Oracle Instant Client for sqlplus
-dnf install -y libaio
+# Install Oracle Instant Client dependencies
+dnf install -y libaio libnsl wget unzip
 
 # Download and install Oracle Instant Client
 cd /tmp
 wget https://download.oracle.com/otn_software/linux/instantclient/1923000/instantclient-basic-linux.x64-19.23.0.0.0dbru.zip
 wget https://download.oracle.com/otn_software/linux/instantclient/1923000/instantclient-sqlplus-linux.x64-19.23.0.0.0dbru.zip
 
-unzip instantclient-basic-linux.x64-19.23.0.0.0dbru.zip -d /opt/oracle
-unzip instantclient-sqlplus-linux.x64-19.23.0.0.0dbru.zip -d /opt/oracle
+unzip -o instantclient-basic-linux.x64-19.23.0.0.0dbru.zip -d /opt/oracle
+unzip -o instantclient-sqlplus-linux.x64-19.23.0.0.0dbru.zip -d /opt/oracle
 
 # Set Oracle environment variables
 echo "export ORACLE_HOME=/opt/oracle/instantclient_19_23" >> /etc/profile.d/oracle.sh
@@ -42,7 +42,7 @@ ln -sf /opt/oracle/instantclient_19_23/sqlplus /usr/local/bin/sqlplus
 # Clone project repository
 mkdir -p /home/ec2-user/projects
 cd /home/ec2-user/projects
-git clone https://github.com/dongkoo81/oracle-postgresql-migration.git oracle-apg-mig
+git clone https://github.com/dongkoo81/oracle-postgresql-migration.git
 
 # Set ownership
 chown -R ec2-user:ec2-user /home/ec2-user/projects
@@ -54,4 +54,4 @@ psql --version
 sqlplus -v
 
 echo "Installation completed successfully!"
-echo "Project cloned to: /home/ec2-user/projects/oracle-apg-mig"
+echo "Project cloned to: /home/ec2-user/projects/oracle-postgresql-migration"

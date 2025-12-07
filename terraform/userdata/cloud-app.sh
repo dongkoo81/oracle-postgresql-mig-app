@@ -5,11 +5,6 @@ set -e
 hostnamectl set-hostname cloud-app
 echo "127.0.0.1 cloud-app" >> /etc/hosts
 
-# Wait for cloud-init to finish
-while [ ! -f /var/lib/cloud/instance/boot-finished ]; do
-  sleep 1
-done
-
 # Wait for any existing dnf processes
 while pgrep -x dnf > /dev/null; do
   sleep 2
@@ -28,11 +23,12 @@ dnf install -y java-17-amazon-corretto-devel
 dnf install -y postgresql16
 
 # Clone project repository
-cd /home/ec2-user
+mkdir -p /home/ec2-user/projects
+cd /home/ec2-user/projects
 git clone https://github.com/dongkoo81/oracle-postgresql-migration.git
 
 # Set ownership
-chown -R ec2-user:ec2-user /home/ec2-user/oracle-postgresql-migration
+chown -R ec2-user:ec2-user /home/ec2-user/projects
 
 # Verify installations
 git --version
@@ -40,4 +36,4 @@ java -version
 psql --version
 
 echo "Installation completed successfully!"
-echo "Project cloned to: /home/ec2-user/oracle-postgresql-migration"
+echo "Project cloned to: /home/ec2-user/projects/oracle-postgresql-migration"

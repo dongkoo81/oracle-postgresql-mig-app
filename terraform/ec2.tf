@@ -31,7 +31,8 @@ resource "aws_instance" "on_premises_app" {
   }
 
   tags = {
-    Name = "on-premises-app"
+    Name        = "on-premises-app"
+    auto-delete = "no"
   }
 }
 
@@ -52,7 +53,8 @@ resource "aws_instance" "cloud_app" {
   }
 
   tags = {
-    Name = "cloud-app"
+    Name        = "cloud-app"
+    auto-delete = "no"
   }
 }
 
@@ -73,6 +75,7 @@ resource "aws_instance" "onprem_oracle" {
   }
 
   tags = {
-    Name = "onprem-oracle-ee-19c"
+    Name        = "onprem-oracle-ee-19c"
+    auto-delete = "no"
   }
 }

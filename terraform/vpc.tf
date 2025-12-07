@@ -5,7 +5,8 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name = "vpc-${var.project_name}"
+    Name        = "vpc-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -14,7 +15,8 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "igw-${var.project_name}"
+    Name        = "igw-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -27,7 +29,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "public-subnet-${count.index + 1}-${var.project_name}"
+    Name        = "public-subnet-${count.index + 1}-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -39,7 +42,8 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name = "private-subnet-${count.index + 1}-${var.project_name}"
+    Name        = "private-subnet-${count.index + 1}-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -48,7 +52,8 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name = "eip-nat-${var.project_name}"
+    Name        = "eip-nat-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -58,7 +63,8 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "nat-${var.project_name}"
+    Name        = "nat-${var.project_name}"
+    auto-delete = "no"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -74,7 +80,8 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "public-rt-${var.project_name}"
+    Name        = "public-rt-${var.project_name}"
+    auto-delete = "no"
   }
 }
 
@@ -88,7 +95,8 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "private-rt-${var.project_name}"
+    Name        = "private-rt-${var.project_name}"
+    auto-delete = "no"
   }
 }
 

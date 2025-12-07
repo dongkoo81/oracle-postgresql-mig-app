@@ -16,7 +16,8 @@ resource "aws_iam_role" "ec2_ssm_role" {
   })
 
   tags = {
-    Name = "${var.project_name}-ec2-ssm-role"
+    Name        = "${var.project_name}-ec2-ssm-role"
+    auto-delete = "no"
   }
 }
 

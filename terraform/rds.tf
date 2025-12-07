@@ -4,7 +4,8 @@ resource "aws_db_subnet_group" "aurora" {
   subnet_ids = aws_subnet.private[*].id
 
   tags = {
-    Name = "${var.project_name}-db-subnet-group"
+    Name        = "${var.project_name}-db-subnet-group"
+    auto-delete = "no"
   }
 }
 
@@ -14,7 +15,8 @@ resource "aws_rds_cluster_parameter_group" "aurora" {
   family = "aurora-postgresql17"
 
   tags = {
-    Name = "cloud-aurora-postgresql-pg17"
+    Name        = "cloud-aurora-postgresql-pg17"
+    auto-delete = "no"
   }
 }
 
@@ -24,7 +26,8 @@ resource "aws_db_parameter_group" "aurora" {
   family = "aurora-postgresql17"
 
   tags = {
-    Name = "cloud-aurora-postgresql-instance-pg17"
+    Name        = "cloud-aurora-postgresql-instance-pg17"
+    auto-delete = "no"
   }
 }
 
@@ -46,7 +49,8 @@ resource "aws_rds_cluster" "aurora" {
   preferred_maintenance_window = "mon:04:00-mon:05:00"
 
   tags = {
-    Name = "cloud-aurora-postgresql"
+    Name        = "cloud-aurora-postgresql"
+    auto-delete = "no"
   }
 }
 
@@ -61,6 +65,7 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
   publicly_accessible     = false
 
   tags = {
-    Name = "cloud-aurora-postgresql-writer"
+    Name        = "cloud-aurora-postgresql-writer"
+    auto-delete = "no"
   }
 }

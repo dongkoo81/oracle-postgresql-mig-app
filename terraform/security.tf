@@ -21,6 +21,7 @@ resource "aws_security_group" "main" {
   }
 
   tags = {
-    Name = "${var.project_name}-sg"
+    Name        = "${var.project_name}-sg"
+    auto-delete = "no"
   }
 }

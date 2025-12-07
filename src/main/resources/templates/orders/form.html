@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>작업지시 등록 - MES</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .product-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>작업지시 등록</h1>
+        
+        <form th:action="@{/orders}" method="post" th:object="${order}">
+            <div class="form-group">
+                <label for="orderNo">작업지시번호:</label>
+                <input type="text" id="orderNo" name="orderNo" required 
+                       th:placeholder="'WO-' + ${#temporals.format(#temporals.createNow(), 'yyyyMMddHHmmss')}">
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">비고:</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="작업 지시 사항을 입력하세요"></textarea>
+            </div>
+            
+            <h3>생산 품목</h3>
+            <div id="orderDetails">
+                <div class="product-row" th:each="product, stat : ${products}">
+                    <div>
+                        <input type="hidden" name="productIds" th:value="${product.productId}">
+                        <strong th:text="${product.productName}">제품명</strong>
+                        <span th:text="'(' + ${product.productCode} + ')'">코드</span>
+                        <br>
+                        <small th:text="'단가: ' + ${#numbers.formatDecimal(product.unitPrice, 0, 'COMMA', 2, 'POINT')} + '원'">단가</small>
+                    </div>
+                    <div>
+                        <label th:for="'qty_' + ${stat.index}">생산수량:</label>
+                        <input type="number" th:id="'qty_' + ${stat.index}" name="quantities" 
+                               value="0" min="0" style="width: 100px;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">작업지시 등록</button>
+                <a th:href="@{/orders}" class="btn">취소</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

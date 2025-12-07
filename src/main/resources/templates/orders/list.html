@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>작업지시 목록 - MES</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .oracle-info { background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 작업지시 목록</h1>
+        
+        <div class="oracle-info">
+            <strong>🔧 Oracle 기능:</strong> Stored Procedure (주문 금액 계산), Trigger (이력 자동 기록), CLOB (NOTES 컬럼 - 4GB 텍스트)
+        </div>
+        
+        <div class="actions">
+            <a th:href="@{/orders/new}" class="btn btn-primary">새 작업지시 등록</a>
+            <a th:href="@{/products}" class="btn">제품 관리</a>
+            <a th:href="@{/}" class="btn">홈으로</a>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>작업지시번호</th>
+                    <th>지시일자</th>
+                    <th>총액</th>
+                    <th>비고</th>
+                    <th>상세</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.orderNo}">WO-001</td>
+                    <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}">2025-12-02</td>
+                    <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}">1,000.00</td>
+                    <td th:text="${order.notes}">비고</td>
+                    <td>
+                        <a th:href="@{/orders/{id}(id=${order.orderId})}" class="btn btn-sm">상세보기</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(orders)}">
+                    <td colspan="5" style="text-align: center;">등록된 작업지시가 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

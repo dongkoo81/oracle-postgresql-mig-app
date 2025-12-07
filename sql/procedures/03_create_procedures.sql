@@ -1,0 +1,87 @@
+-- 주문 총액 계산 프로시저
+CREATE OR REPLACE PROCEDURE CALCULATE_ORDER_TOTAL(
+    p_order_id IN NUMBER,
+    p_total_amount OUT NUMBER
+) AS
+BEGIN
+    SELECT SUM(LINE_AMOUNT)
+    INTO p_total_amount
+    FROM ORDER_DETAIL
+    WHERE ORDER_ID = p_order_id;
+    
+    UPDATE PRODUCTION_ORDER
+    SET TOTAL_AMOUNT = p_total_amount
+    WHERE ORDER_ID = p_order_id;
+    
+    COMMIT;
+END;
+/
+
+-- 제품 가용성 확인 함수
+CREATE OR REPLACE FUNCTION CHECK_PRODUCT_AVAILABLE(
+    p_product_id IN NUMBER,
+    p_required_qty IN NUMBER
+) RETURN NUMBER AS
+    v_current_qty NUMBER;
+BEGIN
+    SELECT QUANTITY
+    INTO v_current_qty
+    FROM INVENTORY
+    WHERE PRODUCT_ID = p_product_id;
+    
+    IF v_current_qty >= p_required_qty THEN
+        RETURN 1;
+    ELSE
+        RETURN 0;
+    END IF;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+END;
+/
+
+-- 주문 생성 시 이력 자동 생성 트리거
+CREATE OR REPLACE TRIGGER TRG_ORDER_HISTORY
+AFTER INSERT ON PRODUCTION_ORDER
+FOR EACH ROW
+BEGIN
+    INSERT INTO PRODUCTION_HISTORY (
+        HISTORY_ID,
+        ORDER_ID,
+        PARENT_ID,
+        PROCESS_NAME,
+        PROCESS_DATE
+    ) VALUES (
+        PRODUCTION_HISTORY_SEQ.NEXTVAL,
+        :NEW.ORDER_ID,
+        NULL,
+        'ORDER_CREATED',
+        SYSTIMESTAMP
+    );
+END;
+/
+
+-- Materialized View for Daily Summary
+-- Drop if exists
+BEGIN
+    EXECUTE IMMEDIATE 'DROP MATERIALIZED VIEW DAILY_SUMMARY';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -12003 THEN
+            RAISE;
+        END IF;
+END;
+/
+
+CREATE MATERIALIZED VIEW DAILY_SUMMARY
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT 
+    TRUNC(ORDER_DATE) AS SUMMARY_DATE,
+    COUNT(*) AS TOTAL_ORDERS,
+    SUM(NVL(TOTAL_AMOUNT, 0)) AS TOTAL_AMOUNT
+FROM PRODUCTION_ORDER
+GROUP BY TRUNC(ORDER_DATE);
+
+COMMIT;

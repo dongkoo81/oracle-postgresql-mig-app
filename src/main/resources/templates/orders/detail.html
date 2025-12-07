@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>작업지시 상세 - MES</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1>작업지시 상세</h1>
+        
+        <div class="detail-section">
+            <h3>작업지시 정보</h3>
+            <table class="detail-table">
+                <tr>
+                    <th>작업지시번호:</th>
+                    <td th:text="${order.orderNo}">WO-001</td>
+                </tr>
+                <tr>
+                    <th>지시일자:</th>
+                    <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}">2025-12-02</td>
+                </tr>
+                <tr>
+                    <th>총액:</th>
+                    <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')} + '원'">1,000.00원</td>
+                </tr>
+                <tr>
+                    <th>비고:</th>
+                    <td th:text="${order.notes}">비고 내용</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="form-actions">
+            <a th:href="@{/orders}" class="btn">목록으로</a>
+        </div>
+    </div>
+</body>
+</html>

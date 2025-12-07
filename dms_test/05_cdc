@@ -1,0 +1,155 @@
+> 좋습니다! PK 없는 테스트 테이블을 만들겠습니다.
+I will run the following command: sqlplus -S mesuser/mespass@10.1.5.18:1521/oracle19c <<EOF
+-- PK 없는 테스트 테이블 생성
+CREATE TABLE test_no_pk (
+    id NUMBER(10),
+    name VARCHAR2(100),
+    status VARCHAR2(20),
+    created_date DATE DEFAULT SYSDATE
+);
+
+-- 샘플 데이터 삽입
+INSERT INTO test_no_pk VALUES (1, 'Test 1', 'ACTIVE', SYSDATE);
+INSERT INTO test_no_pk VALUES (2, 'Test 2', 'INACTIVE', SYSDATE);
+INSERT INTO test_no_pk VALUES (3, 'Test 3', 'ACTIVE', SYSDATE);
+COMMIT;
+
+-- 확인
+SELECT * FROM test_no_pk;
+
+-- PK 확인
+SELECT TABLE_NAME, CONSTRAINT_NAME, CONSTRAINT_TYPE 
+FROM USER_CONSTRAINTS 
+WHERE TABLE_NAME = 'TEST_NO_PK';
+
+EXIT;
+EOF (using tool: shell)
+Purpose: PK 없는 CDC 테스트 테이블 생성
+
+
+Table created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+Commit complete.
+
+
+        ID
+----------
+NAME
+--------------------------------------------------------------------------------
+STATUS               CREATED_D
+-------------------- ---------
+         1
+Test 1
+ACTIVE               03-DEC-25
+
+         2
+Test 2
+INACTIVE             03-DEC-25
+
+        ID
+----------
+NAME
+--------------------------------------------------------------------------------
+STATUS               CREATED_D
+-------------------- ---------
+
+         3
+Test 3
+ACTIVE               03-DEC-25
+
+
+
+no rows selected
+
+ - Completed in 0.179s
+
+I will run the following command: psql -h target-postgresql.cluster-cmjs2qxaojzn.ap-northeast-2.rds.amazonaws.com -U mesuser -d target <<EOF
+-- PK 없는 테이블 생성
+CREATE TABLE test_no_pk (
+    id integer,
+    name varchar(100),
+    status varchar(20),
+    created_date timestamp
+);
+
+-- 확인
+\d mesuser.test_no_pk
+
+SELECT * FROM mesuser.test_no_pk;
+EOF (using tool: shell)
+Purpose: PostgreSQL에도 PK 없는 테이블 생성
+
+Password for user mesuser: 
+CREATE TABLE
+                         Table "mesuser.test_no_pk"
+    Column    |            Type             | Collation | Nullable | Default 
+--------------+-----------------------------+-----------+----------+---------
+ id           | integer                     |           |          | 
+ name         | character varying(100)      |           |          | 
+ status       | character varying(20)       |           |          | 
+ created_date | timestamp without time zone |           |          | 
+
+ id | name | status | created_date 
+----+------+--------+--------------
+(0 rows)
+
+ - Completed in 17.710s
+
+I will run the following command: sqlplus -S mesuser/mespass@10.1.5.18:1521/oracle19c <<EOF
+-- cdcuser에게 권한 부여
+GRANT SELECT ON test_no_pk TO cdcuser;
+
+-- 확인
+SELECT GRANTEE, TABLE_NAME, PRIVILEGE 
+FROM USER_TAB_PRIVS_MADE 
+WHERE TABLE_NAME = 'TEST_NO_PK';
+
+EXIT;
+EOF (using tool: shell)
+Purpose: cdcuser에게 test_no_pk 테이블 권한 부여
+
+
+Grant succeeded.
+
+
+GRANTEE
+--------------------------------------------------------------------------------
+TABLE_NAME
+--------------------------------------------------------------------------------
+PRIVILEGE
+----------------------------------------
+CDCUSER
+TEST_NO_PK
+SELECT
+
+
+ - Completed in 0.231s
+
+ Endpoint identifier: oracle-cdc-endpoint
+Source engine: Oracle
+Server name: 10.1.5.18
+Port: 1521
+SID/Service name: oracle19c
+Username: cdcuser
+Password: cdcpass123
+
+
+### 추가 설정 (Advanced 탭)
+Extra connection attributes:
+useLogminerReader=N;useBfile=N
+
+
+GRANT CREATE ON SCHEMA public TO mesuser;
+GRANT USAGE ON SCHEMA public TO mesuser;
+
+####################################

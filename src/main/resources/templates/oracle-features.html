@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Oracle 특화 기능</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin-bottom: 10px; }
+        .back-link { display: inline-block; color: white; text-decoration: none; margin-bottom: 10px; opacity: 0.9; }
+        .back-link:hover { opacity: 1; text-decoration: underline; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card h3 { color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .form-group textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+        button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        button:hover { background: #5568d3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #28a745; }
+        .result.error { border-left-color: #dc3545; background: #fff5f5; }
+        .result h4 { margin-bottom: 10px; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table th, table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        table th { background: #f8f9fa; font-weight: 600; color: #555; }
+        table tr:hover { background: #f8f9fa; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: 500; }
+        .badge.success { background: #d4edda; color: #155724; }
+        .badge.danger { background: #f8d7da; color: #721c24; }
+        .tree { margin-left: 20px; }
+        .tree-item { padding: 5px 0; }
+        .loading { display: none; color: #667eea; margin-top: 10px; }
+        .loading.show { display: block; }
+        pre { background: #f1f3f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-link">← 홈으로</a>
+            <h1>🔧 Oracle 특화 기능</h1>
+            <p>Oracle 19c의 고급 기능을 실제로 사용해보세요</p>
+        </div>
+
+        <div class="grid">
+            <!-- 1. QueryDSL 동적 검색 -->
+            <div class="card">
+                <h3>📦 제품 검색 (QueryDSL)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> QueryDSL 동적 쿼리, WHERE 조건 동적 생성
+                </p>
+                <div class="form-group">
+                    <label>제품명</label>
+                    <input type="text" id="search-name" placeholder="제품명 입력">
+                </div>
+                <div class="form-group">
+                    <label>최소 가격</label>
+                    <input type="number" id="search-minPrice" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>최대 가격</label>
+                    <input type="number" id="search-maxPrice" placeholder="999999">
+                </div>
+                <button onclick="searchProducts()">검색</button>
+                <div class="loading" id="search-loading">검색 중...</div>
+                <div id="search-result"></div>
+            </div>
+
+            <!-- 2. Stored Function - 재고 확인 -->
+            <div class="card">
+                <h3>📊 재고 가용성 확인 (Stored Function)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> Stored Function (CHECK_PRODUCT_AVAILABLE), RETURN 값 반환
+                </p>
+                <div class="form-group">
+                    <label>제품 선택</label>
+                    <select id="stock-productId">
+                        <option value="">제품을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>필요 수량</label>
+                    <input type="number" id="stock-qty" placeholder="수량 입력" value="10">
+                </div>
+                <button onclick="checkStock()">재고 확인</button>
+                <div class="loading" id="stock-loading">확인 중...</div>
+                <div id="stock-result"></div>
+            </div>
+
+            <!-- 3. Stored Procedure - 주문 금액 계산 -->
+            <div class="card">
+                <h3>💰 주문 금액 계산 (Stored Procedure)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> Stored Procedure (CALCULATE_ORDER_TOTAL), OUT 파라미터
+                </p>
+                <div class="form-group">
+                    <label>주문 선택</label>
+                    <select id="calc-orderId">
+                        <option value="">주문을 선택하세요</option>
+                    </select>
+                </div>
+                <button onclick="calculateTotal()">금액 계산</button>
+                <div class="loading" id="calc-loading">계산 중...</div>
+                <div id="calc-result"></div>
+            </div>
+
+            <!-- 4. CONNECT BY - 생산 이력 -->
+            <div class="card">
+                <h3>🔗 생산 이력 조회 (CONNECT BY)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> CONNECT BY 계층 쿼리, START WITH, PRIOR (트리 구조)
+                </p>
+                <div class="form-group">
+                    <label>주문 선택</label>
+                    <select id="hier-orderId">
+                        <option value="">주문을 선택하세요</option>
+                    </select>
+                </div>
+                <button onclick="viewHierarchy()">이력 조회</button>
+                <div class="loading" id="hier-loading">조회 중...</div>
+                <div id="hier-result"></div>
+            </div>
+
+            <!-- 5. CLOB - 문서 관리 -->
+            <div class="card">
+                <h3>📄 문서 관리 (CLOB)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> CLOB (4GB 대용량 텍스트), @Lob 어노테이션
+                </p>
+                <div class="form-group">
+                    <label>제품 선택</label>
+                    <select id="doc-productId">
+                        <option value="">제품을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>문서 유형</label>
+                    <select id="doc-type" onchange="loadDocTemplate()">
+                        <option value="">선택하세요</option>
+                        <option value="manual">사용자 매뉴얼</option>
+                        <option value="spec">기술 사양서</option>
+                        <option value="inspection">품질 검사 기록</option>
+                        <option value="maintenance">유지보수 가이드</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>문서 제목</label>
+                    <input type="text" id="doc-name" placeholder="문서 제목">
+                </div>
+                <div class="form-group">
+                    <label>문서 내용 (대용량 텍스트)</label>
+                    <textarea id="doc-content" placeholder="문서 유형을 선택하면 템플릿이 로드됩니다..." rows="10"></textarea>
+                </div>
+                <button onclick="saveDocument()">문서 저장</button>
+                <button onclick="viewDocuments()" style="background: #17a2b8; margin-left: 10px;">문서 조회</button>
+                <div class="loading" id="doc-loading">처리 중...</div>
+                <div id="doc-result"></div>
+            </div>
+
+            <!-- 6. XMLType - 제품 사양 -->
+            <div class="card">
+                <h3>📋 제품 사양 (XMLType)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> XMLType 컬럼, XML 검증, XPath 쿼리
+                </p>
+                <div class="form-group">
+                    <label>제품 선택</label>
+                    <select id="xml-productId" onchange="filterXmlTemplates()">
+                        <option value="">제품을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>사양 템플릿</label>
+                    <select id="xml-template" onchange="loadXmlTemplate()">
+                        <option value="">제품을 먼저 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>XML 사양 (XSD 검증)</label>
+                    <textarea id="xml-content" placeholder="사양 템플릿을 선택하세요..." rows="12"></textarea>
+                </div>
+                <button onclick="validateAndSaveSpec()">검증 후 저장</button>
+                <button onclick="viewSpecs()" style="background: #17a2b8; margin-left: 10px;">사양 조회</button>
+                <div class="loading" id="xml-loading">처리 중...</div>
+                <div id="xml-result"></div>
+            </div>
+
+            <!-- 7. Materialized View - 일일 요약 -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3>📈 일일 주문 요약 (Materialized View)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    🔧 <strong>Oracle 기능:</strong> Materialized View (물리적 저장), REFRESH ON DEMAND, 집계 쿼리 성능 최적화
+                </p>
+                <button onclick="viewSummary()">요약 조회</button>
+                <button onclick="refreshMView()" style="background: #28a745; margin-left: 10px;">🔄 MView Refresh</button>
+                <div class="loading" id="summary-loading">조회 중...</div>
+                <div id="summary-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 초기 데이터 로드
+        window.onload = function() {
+            loadProducts();
+            loadOrders();
+        };
+
+        // 제품 목록 로드
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products');
+                const data = await res.json();
+                const products = data.content || data; // 페이지네이션 처리
+                
+                ['stock-productId', 'doc-productId', 'xml-productId'].forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">제품을 선택하세요</option>';
+                    products.forEach(p => {
+                        select.innerHTML += `<option value="${p.productId}">${p.productName} (${p.productCode})</option>`;
+                    });
+                });
+            } catch (e) {
+                console.error('제품 로드 실패:', e);
+            }
+        }
+
+        // 주문 목록 로드
+        async function loadOrders() {
+            try {
+                const res = await fetch('/api/orders');
+                const data = await res.json();
+                const orders = data.content || data; // 페이지네이션 처리
+                
+                ['calc-orderId', 'hier-orderId'].forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = '<option value="">주문을 선택하세요</option>';
+                    orders.forEach(o => {
+                        select.innerHTML += `<option value="${o.orderId}">${o.orderNo} (${o.orderDate})</option>`;
+                    });
+                });
+            } catch (e) {
+                console.error('주문 로드 실패:', e);
+            }
+        }
+
+        // 1. 제품 검색
+        async function searchProducts() {
+            const name = document.getElementById('search-name').value;
+            const minPrice = document.getElementById('search-minPrice').value;
+            const maxPrice = document.getElementById('search-maxPrice').value;
+            
+            showLoading('search-loading', true);
+            try {
+                const params = new URLSearchParams();
+                if (name) params.append('name', name);
+                if (minPrice) params.append('minPrice', minPrice);
+                if (maxPrice) params.append('maxPrice', maxPrice);
+                
+                const res = await fetch(`/api/test/oracle/querydsl/search?${params}`);
+                const products = await res.json();
+                
+                let html = '<h4>검색 결과 (' + products.length + '건)</h4>';
+                if (products.length > 0) {
+                    html += '<table><tr><th>제품코드</th><th>제품명</th><th>단가</th><th>등록일</th></tr>';
+                    products.forEach(p => {
+                        html += `<tr><td>${p.productCode}</td><td>${p.productName}</td><td>${p.unitPrice?.toLocaleString()}원</td><td>${p.createdDate || '-'}</td></tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p>검색 결과가 없습니다.</p>';
+                }
+                
+                showResult('search-result', html);
+            } catch (e) {
+                showResult('search-result', '<p>검색 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('search-loading', false);
+            }
+        }
+
+        // 2. 재고 확인
+        async function checkStock() {
+            const productId = document.getElementById('stock-productId').value;
+            const qty = document.getElementById('stock-qty').value;
+            
+            if (!productId || !qty) {
+                alert('제품과 수량을 입력하세요');
+                return;
+            }
+            
+            showLoading('stock-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/function/check-available?productId=${productId}&requiredQty=${qty}`);
+                const data = await res.json();
+                
+                const badge = data.available ? 
+                    '<span class="badge success">✓ 재고 충분</span>' : 
+                    '<span class="badge danger">✗ 재고 부족</span>';
+                
+                const html = `<h4>재고 확인 결과</h4><p>${badge}</p><p>요청 수량: ${qty}개</p>`;
+                showResult('stock-result', html);
+            } catch (e) {
+                showResult('stock-result', '<p>확인 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('stock-loading', false);
+            }
+        }
+
+        // 3. 주문 금액 계산
+        async function calculateTotal() {
+            const orderId = document.getElementById('calc-orderId').value;
+            
+            if (!orderId) {
+                alert('주문을 선택하세요');
+                return;
+            }
+            
+            showLoading('calc-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/procedure/calculate-total/${orderId}`, { method: 'POST' });
+                const data = await res.json();
+                
+                const html = `<h4>계산 결과</h4>
+                    <p><strong>주문 ID:</strong> ${data.orderId || orderId}</p>
+                    <p><strong>총 금액:</strong> ${data.totalAmount?.toLocaleString() || 0}원</p>
+                    <p><strong>상태:</strong> ${data.resultMessage || '계산 완료'}</p>`;
+                
+                showResult('calc-result', html);
+            } catch (e) {
+                showResult('calc-result', '<p>계산 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('calc-loading', false);
+            }
+        }
+
+        // 4. 생산 이력 조회
+        async function viewHierarchy() {
+            const orderId = document.getElementById('hier-orderId').value;
+            
+            if (!orderId) {
+                alert('주문을 선택하세요');
+                return;
+            }
+            
+            showLoading('hier-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/hierarchy/${orderId}`);
+                const history = await res.json();
+                
+                let html = '<h4>생산 이력 (' + history.length + '건)</h4>';
+                if (history.length > 0) {
+                    html += '<table><tr><th>프로세스</th><th>처리일시</th><th>레벨</th></tr>';
+                    history.forEach(h => {
+                        const indent = '&nbsp;'.repeat((h.level || 0) * 4);
+                        html += `<tr><td>${indent}${h.processName || '-'}</td><td>${h.processDate || '-'}</td><td>${h.level || 0}</td></tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p>생산 이력이 없습니다.</p>';
+                }
+                
+                showResult('hier-result', html);
+            } catch (e) {
+                showResult('hier-result', '<p>조회 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('hier-loading', false);
+            }
+        }
+
+        // 5. 문서 저장
+        async function saveDocument() {
+            const productId = document.getElementById('doc-productId').value;
+            const name = document.getElementById('doc-name').value;
+            const content = document.getElementById('doc-content').value;
+            
+            if (!productId || !name || !content) {
+                alert('모든 필드를 입력하세요');
+                return;
+            }
+            
+            showLoading('doc-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/clob/save?productId=${productId}&content=${encodeURIComponent(content)}`, { method: 'POST' });
+                const data = await res.json();
+                
+                const html = `<h4>저장 완료</h4>
+                    <p><strong>문서 ID:</strong> ${data.docId}</p>
+                    <p><strong>내용 길이:</strong> ${data.contentLength}자</p>
+                    <p class="badge success">CLOB 타입으로 저장됨</p>`;
+                
+                showResult('doc-result', html);
+            } catch (e) {
+                showResult('doc-result', '<p>저장 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('doc-loading', false);
+            }
+        }
+
+        // 5-1. 문서 템플릿 로드
+        function loadDocTemplate() {
+            const type = document.getElementById('doc-type').value;
+            const templates = {
+                'manual': `=== 사용자 매뉴얼 ===
+
+1. 제품 개요
+   - 제품명: 
+   - 모델번호: 
+   - 제조일자: 
+
+2. 안전 주의사항
+   - 경고사항
+   - 주의사항
+
+3. 사용 방법
+   - 설치 방법
+   - 작동 방법
+   - 유지보수 방법
+
+4. 문제 해결
+   - 일반적인 문제
+   - 해결 방법
+
+5. 기술 지원
+   - 연락처
+   - 보증 정보`,
+                'spec': `=== 기술 사양서 ===
+
+1. 제품 정보
+   - 제품명: 
+   - 제품코드: 
+   - 버전: 
+
+2. 기술 사양
+   - 크기: 
+   - 무게: 
+   - 재질: 
+   - 성능: 
+
+3. 환경 조건
+   - 작동 온도: 
+   - 보관 온도: 
+   - 습도: 
+
+4. 인증 및 규격
+   - 인증번호: 
+   - 준수 규격: 
+
+5. 비고
+   - 특이사항`,
+                'inspection': `=== 품질 검사 기록 ===
+
+1. 검사 정보
+   - 검사일자: 
+   - 검사자: 
+   - 검사 항목: 
+
+2. 외관 검사
+   - 상태: 
+   - 결함 여부: 
+   - 비고: 
+
+3. 치수 검사
+   - 측정값: 
+   - 허용 오차: 
+   - 합격 여부: 
+
+4. 성능 검사
+   - 테스트 항목: 
+   - 측정 결과: 
+   - 판정: 
+
+5. 종합 판정
+   - 합격/불합격: 
+   - 조치사항: `,
+                'maintenance': `=== 유지보수 가이드 ===
+
+1. 정기 점검 항목
+   - 일일 점검: 
+   - 주간 점검: 
+   - 월간 점검: 
+
+2. 소모품 교체
+   - 교체 주기: 
+   - 교체 방법: 
+   - 권장 부품: 
+
+3. 청소 및 관리
+   - 청소 방법: 
+   - 주의사항: 
+
+4. 고장 진단
+   - 증상별 원인: 
+   - 해결 방법: 
+
+5. 보관 방법
+   - 장기 보관 시: 
+   - 주의사항: `
+            };
+            
+            const content = templates[type] || '';
+            document.getElementById('doc-content').value = content;
+            if (type) {
+                document.getElementById('doc-name').value = type === 'manual' ? '사용자 매뉴얼' :
+                    type === 'spec' ? '기술 사양서' :
+                    type === 'inspection' ? '품질 검사 기록' : '유지보수 가이드';
+            }
+        }
+
+        // 5-2. 문서 조회
+        async function viewDocuments() {
+            const productId = document.getElementById('doc-productId').value;
+            
+            if (!productId) {
+                alert('제품을 선택하세요');
+                return;
+            }
+            
+            showLoading('doc-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/documents/product/${productId}`);
+                const docs = await res.json();
+                
+                let html = '<h4>문서 목록 (' + docs.length + '건)</h4>';
+                if (docs.length > 0) {
+                    html += '<table><tr><th>문서명</th><th>내용 미리보기</th><th>등록일</th></tr>';
+                    docs.forEach(d => {
+                        const preview = (d.docContent || '').substring(0, 50) + '...';
+                        html += `<tr><td>${d.docName || '-'}</td><td>${preview}</td><td>${d.createdDate || '-'}</td></tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p>등록된 문서가 없습니다.</p>';
+                }
+                
+                showResult('doc-result', html);
+            } catch (e) {
+                showResult('doc-result', '<p>조회 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('doc-loading', false);
+            }
+        }
+
+        // 6. XML 사양 저장 (검증 포함)
+        async function validateAndSaveSpec() {
+            const productId = document.getElementById('xml-productId').value;
+            const xmlContent = document.getElementById('xml-content').value;
+            
+            if (!productId || !xmlContent) {
+                alert('제품과 XML 내용을 입력하세요');
+                return;
+            }
+            
+            // 간단한 XML 검증
+            if (!xmlContent.trim().startsWith('<spec>') || !xmlContent.trim().endsWith('</spec>')) {
+                alert('❌ XML 형식 오류: <spec>로 시작하고 </spec>로 끝나야 합니다');
+                return;
+            }
+            
+            // 필수 필드 검증
+            if (!xmlContent.includes('<version>') || !xmlContent.includes('<category>')) {
+                alert('❌ 필수 필드 누락: version, category는 필수입니다');
+                return;
+            }
+            
+            showLoading('xml-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/xml/save?productId=${productId}&xmlContent=${encodeURIComponent(xmlContent)}`, { method: 'POST' });
+                const data = await res.json();
+                
+                const html = `<h4>저장 완료</h4>
+                    <p><strong>사양 ID:</strong> ${data.specId}</p>
+                    <p class="badge success">✓ XML 검증 통과</p>
+                    <p class="badge success">XMLType으로 저장됨</p>
+                    <pre>${xmlContent}</pre>`;
+                
+                showResult('xml-result', html);
+            } catch (e) {
+                showResult('xml-result', '<p>저장 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('xml-loading', false);
+            }
+        }
+
+        // 6-0. 제품에 맞는 템플릿 필터링
+        function filterXmlTemplates() {
+            const productId = document.getElementById('xml-productId').value;
+            const select = document.getElementById('xml-template');
+            
+            if (!productId) {
+                select.innerHTML = '<option value="">제품을 먼저 선택하세요</option>';
+                return;
+            }
+            
+            // 제품명으로 템플릿 매칭
+            const productText = document.getElementById('xml-productId').options[document.getElementById('xml-productId').selectedIndex].text.toLowerCase();
+            
+            select.innerHTML = '<option value="">선택하세요</option>';
+            
+            if (productText.includes('engine') || productText.includes('엔진')) {
+                select.innerHTML += '<option value="engine">엔진 부품</option>';
+            } else if (productText.includes('transmission') || productText.includes('변속기')) {
+                select.innerHTML += '<option value="transmission">변속기 부품</option>';
+            } else if (productText.includes('brake') || productText.includes('브레이크')) {
+                select.innerHTML += '<option value="brake">브레이크 부품</option>';
+            } else {
+                // 기본: 모든 템플릿 표시
+                select.innerHTML += '<option value="engine">엔진 부품</option>';
+                select.innerHTML += '<option value="transmission">변속기 부품</option>';
+                select.innerHTML += '<option value="brake">브레이크 부품</option>';
+                select.innerHTML += '<option value="electronic">전자 부품</option>';
+            }
+        }
+
+        // 6-1. XML 템플릿 로드
+        function loadXmlTemplate() {
+            const type = document.getElementById('xml-template').value;
+            const templates = {
+                'engine': `<spec>
+  <version>1.0</version>
+  <category>Engine</category>
+  <properties>
+    <displacement>2000cc</displacement>
+    <power>150HP</power>
+    <torque>200Nm</torque>
+    <fuelType>Gasoline</fuelType>
+    <cylinders>4</cylinders>
+  </properties>
+  <dimensions>
+    <length>600mm</length>
+    <width>500mm</width>
+    <height>700mm</height>
+    <weight>180kg</weight>
+  </dimensions>
+  <materials>
+    <block>Aluminum Alloy</block>
+    <head>Cast Iron</head>
+  </materials>
+  <certifications>
+    <emission>Euro 6</emission>
+    <safety>ISO 9001</safety>
+  </certifications>
+</spec>`,
+                'transmission': `<spec>
+  <version>1.0</version>
+  <category>Transmission</category>
+  <properties>
+    <type>Automatic</type>
+    <gears>8</gears>
+    <maxTorque>350Nm</maxTorque>
+    <oilCapacity>7L</oilCapacity>
+  </properties>
+  <dimensions>
+    <length>500mm</length>
+    <width>400mm</width>
+    <height>300mm</height>
+    <weight>85kg</weight>
+  </dimensions>
+  <materials>
+    <housing>Aluminum</housing>
+    <gears>Hardened Steel</gears>
+  </materials>
+  <performance>
+    <efficiency>95%</efficiency>
+    <shiftTime>0.2s</shiftTime>
+  </performance>
+</spec>`,
+                'brake': `<spec>
+  <version>1.0</version>
+  <category>Brake</category>
+  <properties>
+    <type>Disc Brake</type>
+    <diameter>320mm</diameter>
+    <thickness>28mm</thickness>
+    <material>Carbon Ceramic</material>
+  </properties>
+  <dimensions>
+    <outerDiameter>320mm</outerDiameter>
+    <innerDiameter>140mm</innerDiameter>
+    <thickness>28mm</thickness>
+    <weight>5.5kg</weight>
+  </dimensions>
+  <performance>
+    <maxTemp>800C</maxTemp>
+    <friction>0.45</friction>
+    <lifespan>80000km</lifespan>
+  </performance>
+  <certifications>
+    <standard>ECE R90</standard>
+    <quality>ISO/TS 16949</quality>
+  </certifications>
+</spec>`,
+                'electronic': `<spec>
+  <version>1.0</version>
+  <category>Electronic</category>
+  <properties>
+    <type>ECU</type>
+    <processor>ARM Cortex-M4</processor>
+    <memory>2MB Flash</memory>
+    <voltage>12V</voltage>
+    <current>5A</current>
+  </properties>
+  <dimensions>
+    <length>150mm</length>
+    <width>100mm</width>
+    <height>40mm</height>
+    <weight>0.5kg</weight>
+  </dimensions>
+  <environment>
+    <operatingTemp>-40C to 85C</operatingTemp>
+    <storageTemp>-40C to 125C</storageTemp>
+    <humidity>5% to 95%</humidity>
+    <waterproof>IP67</waterproof>
+  </environment>
+  <certifications>
+    <emc>ISO 11452</emc>
+    <automotive>AEC-Q100</automotive>
+  </certifications>
+</spec>`
+            };
+            
+            const content = templates[type] || '';
+            document.getElementById('xml-content').value = content;
+        }
+
+        // 6-2. 사양 조회
+        async function viewSpecs() {
+            const productId = document.getElementById('xml-productId').value;
+            
+            if (!productId) {
+                alert('제품을 선택하세요');
+                return;
+            }
+            
+            showLoading('xml-loading', true);
+            try {
+                const res = await fetch(`/api/test/oracle/specs/product/${productId}`);
+                const specs = await res.json();
+                
+                let html = '<h4>제품 사양 (' + specs.length + '건)</h4>';
+                if (specs.length > 0) {
+                    specs.forEach(s => {
+                        html += `<div style="margin-top:15px; padding:10px; background:#f8f9fa; border-radius:4px;">
+                            <p><strong>사양 ID:</strong> ${s.specId}</p>
+                            <p><strong>버전:</strong> ${s.version || '-'}</p>
+                            <p><strong>등록일:</strong> ${s.createdDate || '-'}</p>
+                            <pre style="margin-top:10px;">${s.specXml || '-'}</pre>
+                        </div>`;
+                    });
+                } else {
+                    html += '<p>등록된 사양이 없습니다.</p>';
+                }
+                
+                showResult('xml-result', html);
+            } catch (e) {
+                showResult('xml-result', '<p>조회 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('xml-loading', false);
+            }
+        }
+
+        // 7. 일일 요약 조회
+        async function viewSummary() {
+            showLoading('summary-loading', true);
+            try {
+                const res = await fetch('/api/test/oracle/materialized-view');
+                const summary = await res.json();
+                
+                let html = '<h4>일일 주문 요약 (' + summary.length + '건)</h4>';
+                if (summary.length > 0) {
+                    html += '<table><tr><th>날짜</th><th>주문 건수</th><th>총 금액</th></tr>';
+                    summary.forEach(s => {
+                        html += `<tr><td>${s.summaryDate || '-'}</td><td>${s.totalOrders || 0}건</td><td>${s.totalAmount?.toLocaleString() || 0}원</td></tr>`;
+                    });
+                    html += '</table>';
+                    html += '<p style="margin-top:10px;color:#666;font-size:12px;">* Materialized View에서 조회됨</p>';
+                } else {
+                    html += '<p>요약 데이터가 없습니다.</p>';
+                }
+                
+                showResult('summary-result', html);
+            } catch (e) {
+                showResult('summary-result', '<p>조회 실패: ' + e.message + '</p>', true);
+            } finally {
+                showLoading('summary-loading', false);
+            }
+        }
+
+        // 8. Materialized View Refresh
+        async function refreshMView() {
+            showLoading('summary-loading', true);
+            try {
+                const res = await fetch('/api/test/oracle/materialized-view/refresh', { method: 'POST' });
+                const data = await res.json();
+                alert('✅ Materialized View가 갱신되었습니다!');
+                viewSummary(); // 자동으로 다시 조회
+            } catch (e) {
+                alert('❌ 갱신 실패: ' + e.message);
+            } finally {
+                showLoading('summary-loading', false);
+            }
+        }
+
+        // 유틸리티 함수
+        function showResult(elementId, html, isError = false) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="result ${isError ? 'error' : ''}">${html}</div>`;
+        }
+
+        function showLoading(elementId, show) {
+            const el = document.getElementById(elementId);
+            if (show) {
+                el.classList.add('show');
+            } else {
+                el.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>제품 목록 - MES</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .oracle-info { background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 제품 목록</h1>
+        
+        <div class="oracle-info">
+            <strong>🔧 Oracle 기능:</strong> Sequence (자동 증가 PK), QueryDSL (동적 검색), JPA (ORM)
+        </div>
+        
+        <div class="actions">
+            <a th:href="@{/products/new}" class="btn btn-primary">신규 제품 등록</a>
+            <a th:href="@{/orders}" class="btn">작업지시 관리</a>
+            <a th:href="@{/}" class="btn">홈으로</a>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>제품 ID</th>
+                    <th>제품 코드</th>
+                    <th>제품명</th>
+                    <th>단가</th>
+                    <th>등록일</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="product : ${products.content}">
+                    <td th:text="${product.productId}"></td>
+                    <td th:text="${product.productCode}"></td>
+                    <td th:text="${product.productName}"></td>
+                    <td th:text="${#numbers.formatDecimal(product.unitPrice, 0, 'COMMA', 2, 'POINT')}"></td>
+                    <td th:text="${#temporals.format(product.createdDate, 'yyyy-MM-dd')}"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="pagination" th:if="${products.totalPages > 1}">
+            <span th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}">
+                <a th:href="@{/products(page=${i})}" 
+                   th:text="${i + 1}"
+                   th:classappend="${i == products.number} ? 'active' : ''"></a>
+            </span>
+        </div>
+    </div>
+</body>
+</html>

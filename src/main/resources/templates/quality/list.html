@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>품질검사 이력 - MES</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-pass { background: #d4edda; color: #155724; }
+        .badge-fail { background: #f8d7da; color: #721c24; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .filter-tabs { margin: 20px 0; display: flex; gap: 10px; }
+        .filter-tabs button { padding: 10px 20px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .filter-tabs button.active { background: #667eea; color: white; border-color: #667eea; }
+        .partition-info { background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 품질검사 이력 (파티션 테이블)</h1>
+        
+        <div class="partition-info">
+            <strong>🔧 Oracle Partition Table 기능</strong><br>
+            Range(월별) + List(결과별) Composite Partition으로 데이터 분산 저장
+        </div>
+        
+        <div class="actions">
+            <a th:href="@{/products}" class="btn">제품 관리</a>
+            <a th:href="@{/orders}" class="btn">작업지시 관리</a>
+            <a th:href="@{/}" class="btn">홈으로</a>
+        </div>
+        
+        <div class="filter-tabs">
+            <button onclick="filterResult('ALL')" class="active" id="btn-all">전체</button>
+            <button onclick="filterResult('PASS')" id="btn-pass">합격 (PASS)</button>
+            <button onclick="filterResult('FAIL')" id="btn-fail">불합격 (FAIL)</button>
+            <button onclick="filterResult('PENDING')" id="btn-pending">대기 (PENDING)</button>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>검사 ID</th>
+                    <th>제품 ID</th>
+                    <th>주문 ID</th>
+                    <th>검사일</th>
+                    <th>결과</th>
+                    <th>불량 수</th>
+                    <th>검사자</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody id="inspection-tbody">
+                <tr th:each="inspection : ${inspections}">
+                    <td th:text="${inspection.inspectionId}"></td>
+                    <td th:text="${inspection.productId}"></td>
+                    <td th:text="${inspection.orderId}"></td>
+                    <td th:text="${#temporals.format(inspection.inspectionDate, 'yyyy-MM-dd')}"></td>
+                    <td>
+                        <span th:class="${'badge badge-' + #strings.toLowerCase(inspection.result)}" 
+                              th:text="${inspection.result}"></span>
+                    </td>
+                    <td th:text="${inspection.defectCount}"></td>
+                    <td th:text="${inspection.inspectorName}"></td>
+                    <td th:text="${inspection.notes}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function filterResult(result) {
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.filter-tabs button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + result.toLowerCase()).classList.add('active');
+            
+            // API 호출
+            const url = result === 'ALL' 
+                ? '/api/quality' 
+                : '/api/quality/result/' + result;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('inspection-tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(item => {
+                        const badgeClass = 'badge-' + item.result.toLowerCase();
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${item.inspectionId}</td>
+                                <td>${item.productId}</td>
+                                <td>${item.orderId || '-'}</td>
+                                <td>${item.inspectionDate}</td>
+                                <td><span class="badge ${badgeClass}">${item.result}</span></td>
+                                <td>${item.defectCount}</td>
+                                <td>${item.inspectorName}</td>
+                                <td>${item.notes || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+    </script>
+</body>
+</html>

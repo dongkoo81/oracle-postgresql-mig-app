@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: mes-application
+  
+  mvc:
+    favicon:
+      enabled: false
+  
+  datasource:
+    # url: jdbc:oracle:thin:@//10.1.5.18:1521/oracle19c
+    url: jdbc:oracle:thin:@//proxy.mes.db:5432/oracle19c
+    username: mesuser
+    password: mespass
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1 FROM DUAL
+  
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.autoever.mes.domain.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+  lazy-initialization: true
+
+logging:
+  level:
+    com.autoever.mes: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.zaxxer.hikari: DEBUG

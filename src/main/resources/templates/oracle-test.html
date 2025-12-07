@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Oracle 특화 기능 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        .test-section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .test-section h3 { margin-top: 0; color: #495057; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ced4da; border-radius: 4px; }
+        .result { background: white; padding: 15px; margin-top: 10px; border-left: 4px solid #28a745; border-radius: 4px; }
+        .error { border-left-color: #dc3545; }
+        pre { background: #f1f3f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">← 홈으로 돌아가기</a>
+    <h1>🔧 Oracle 특화 기능 테스트</h1>
+
+    <!-- 1. Stored Procedure -->
+    <div class="test-section">
+        <h3>1. Stored Procedure - 주문 금액 계산</h3>
+        <input type="number" id="proc-orderId" placeholder="Order ID" value="1">
+        <button onclick="testProcedure()">실행</button>
+        <div id="proc-result"></div>
+    </div>
+
+    <!-- 2. Stored Function -->
+    <div class="test-section">
+        <h3>2. Stored Function - 재고 가용성 체크</h3>
+        <input type="number" id="func-productId" placeholder="Product ID" value="1">
+        <input type="number" id="func-qty" placeholder="Required Qty" value="10">
+        <button onclick="testFunction()">실행</button>
+        <div id="func-result"></div>
+    </div>
+
+    <!-- 3. CONNECT BY -->
+    <div class="test-section">
+        <h3>3. CONNECT BY - 계층 쿼리</h3>
+        <input type="number" id="hier-orderId" placeholder="Order ID" value="1">
+        <button onclick="testHierarchy()">실행</button>
+        <div id="hier-result"></div>
+    </div>
+
+    <!-- 4. QueryDSL -->
+    <div class="test-section">
+        <h3>4. QueryDSL - 동적 검색</h3>
+        <input type="text" id="qdsl-name" placeholder="Product Name" value="">
+        <input type="number" id="qdsl-minPrice" placeholder="Min Price" value="">
+        <input type="number" id="qdsl-maxPrice" placeholder="Max Price" value="">
+        <button onclick="testQueryDsl()">검색</button>
+        <div id="qdsl-result"></div>
+    </div>
+
+    <!-- 5. CLOB -->
+    <div class="test-section">
+        <h3>5. CLOB - 대용량 텍스트 저장</h3>
+        <input type="number" id="clob-productId" placeholder="Product ID" value="1">
+        <textarea id="clob-content" placeholder="Content" rows="3" style="width: 100%; padding: 8px;">This is a test CLOB content with large text data...</textarea>
+        <button onclick="testClob()">저장</button>
+        <div id="clob-result"></div>
+    </div>
+
+    <!-- 6. XML -->
+    <div class="test-section">
+        <h3>6. XMLType - XML 저장</h3>
+        <input type="number" id="xml-productId" placeholder="Product ID" value="1">
+        <textarea id="xml-content" placeholder="XML Content" rows="3" style="width: 100%; padding: 8px;"><spec><version>1.0</version><data>test</data></spec></textarea>
+        <button onclick="testXml()">저장</button>
+        <div id="xml-result"></div>
+    </div>
+
+    <!-- 7. Materialized View -->
+    <div class="test-section">
+        <h3>7. Materialized View - 일일 요약</h3>
+        <button onclick="testMaterializedView()">조회</button>
+        <div id="mv-result"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, data, isError = false) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="result ${isError ? 'error' : ''}"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+        }
+
+        async function testProcedure() {
+            const orderId = document.getElementById('proc-orderId').value;
+            try {
+                const res = await fetch(`/api/test/oracle/procedure/calculate-total/${orderId}`, { method: 'POST' });
+                const data = await res.json();
+                showResult('proc-result', data);
+            } catch (e) {
+                showResult('proc-result', { error: e.message }, true);
+            }
+        }
+
+        async function testFunction() {
+            const productId = document.getElementById('func-productId').value;
+            const qty = document.getElementById('func-qty').value;
+            try {
+                const res = await fetch(`/api/test/oracle/function/check-available?productId=${productId}&requiredQty=${qty}`);
+                const data = await res.json();
+                showResult('func-result', data);
+            } catch (e) {
+                showResult('func-result', { error: e.message }, true);
+            }
+        }
+
+        async function testHierarchy() {
+            const orderId = document.getElementById('hier-orderId').value;
+            try {
+                const res = await fetch(`/api/test/oracle/hierarchy/${orderId}`);
+                const data = await res.json();
+                showResult('hier-result', data);
+            } catch (e) {
+                showResult('hier-result', { error: e.message }, true);
+            }
+        }
+
+        async function testQueryDsl() {
+            const name = document.getElementById('qdsl-name').value;
+            const minPrice = document.getElementById('qdsl-minPrice').value;
+            const maxPrice = document.getElementById('qdsl-maxPrice').value;
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            try {
+                const res = await fetch(`/api/test/oracle/querydsl/search?${params}`);
+                const data = await res.json();
+                showResult('qdsl-result', data);
+            } catch (e) {
+                showResult('qdsl-result', { error: e.message }, true);
+            }
+        }
+
+        async function testClob() {
+            const productId = document.getElementById('clob-productId').value;
+            const content = document.getElementById('clob-content').value;
+            try {
+                const res = await fetch(`/api/test/oracle/clob/save?productId=${productId}&content=${encodeURIComponent(content)}`, { method: 'POST' });
+                const data = await res.json();
+                showResult('clob-result', data);
+            } catch (e) {
+                showResult('clob-result', { error: e.message }, true);
+            }
+        }
+
+        async function testXml() {
+            const productId = document.getElementById('xml-productId').value;
+            const xmlContent = document.getElementById('xml-content').value;
+            try {
+                const res = await fetch(`/api/test/oracle/xml/save?productId=${productId}&xmlContent=${encodeURIComponent(xmlContent)}`, { method: 'POST' });
+                const data = await res.json();
+                showResult('xml-result', data);
+            } catch (e) {
+                showResult('xml-result', { error: e.message }, true);
+            }
+        }
+
+        async function testMaterializedView() {
+            try {
+                const res = await fetch('/api/test/oracle/materialized-view');
+                const data = await res.json();
+                showResult('mv-result', data);
+            } catch (e) {
+                showResult('mv-result', { error: e.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

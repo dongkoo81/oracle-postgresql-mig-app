@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.autoever.mes.mapper.OrderMapper">
+
+    <!-- Stored Procedure: CALCULATE_ORDER_TOTAL -->
+    <select id="calculateOrderTotal" statementType="CALLABLE">
+        {CALL CALCULATE_ORDER_TOTAL(
+            #{orderId, mode=IN, jdbcType=NUMERIC},
+            #{result.totalAmount, mode=OUT, jdbcType=NUMERIC}
+        )}
+    </select>
+
+    <!-- Stored Function: CHECK_PRODUCT_AVAILABLE -->
+    <select id="checkProductAvailable" statementType="CALLABLE" resultType="java.lang.Integer">
+        {#{result, mode=OUT, jdbcType=NUMERIC} = CALL CHECK_PRODUCT_AVAILABLE(
+            #{productId, mode=IN, jdbcType=NUMERIC},
+            #{requiredQty, mode=IN, jdbcType=NUMERIC}
+        )}
+    </select>
+
+</mapper>

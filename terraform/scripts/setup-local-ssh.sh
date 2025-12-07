@@ -33,7 +33,7 @@ if ! command -v aws &> /dev/null; then
 fi
 
 # Check if Session Manager Plugin is installed
-if ! aws ssm start-session --help &> /dev/null; then
+if ! command -v session-manager-plugin &> /dev/null; then
     echo "Error: AWS Session Manager Plugin is not installed."
     echo "Install it from: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html"
     exit 1

@@ -1,6 +1,6 @@
 # Security Group - Allow all TCP
 resource "aws_security_group" "main" {
-  name        = "sg-${var.project_name}"
+  name        = "${var.project_name}-sg"
   description = "Security group for ${var.project_name} - Allow all TCP"
   vpc_id      = aws_vpc.main.id
 
@@ -21,6 +21,6 @@ resource "aws_security_group" "main" {
   }
 
   tags = {
-    Name = "sg-${var.project_name}"
+    Name = "${var.project_name}-sg"
   }
 }

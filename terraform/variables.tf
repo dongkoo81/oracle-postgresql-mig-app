@@ -56,5 +56,5 @@ variable "db_name" {
 variable "oracle_ami_id" {
   description = "Oracle EE 19c AMI ID"
   type        = string
-  default     = "ami-05b733ff1080c095f"
+  default     = "ami-0ca7d322ced736417"
 }

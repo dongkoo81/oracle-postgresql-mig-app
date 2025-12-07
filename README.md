@@ -69,7 +69,7 @@ autoever/
 ### 사전 요구사항
 - JDK 17 이상
 - Gradle 8.5 이상
-- Oracle 19c 데이터베이스 (10.1.5.18:1521/oracle19c)
+- Oracle 19c 데이터베이스 (xxxx:1521/oracle19c)
 
 ### 빌드
 ```bash

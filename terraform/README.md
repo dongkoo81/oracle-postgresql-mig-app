@@ -92,6 +92,10 @@ Oracle 19c 기반 MES 애플리케이션 실습 환경을 Terraform으로 자동
    ```
 
 3. **AWS Session Manager Plugin 설치** (VSCode Remote-SSH용)
+
+$ session-manager-plugin --version
+1.2.764.0
+
    - [설치 가이드](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 
 ## 사용 방법

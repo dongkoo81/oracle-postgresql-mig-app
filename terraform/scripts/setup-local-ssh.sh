@@ -49,6 +49,13 @@ BACKUP_CONFIG="$HOME/.ssh/config.backup.$(date +%Y%m%d_%H%M%S)"
 if [ -f "$SSH_CONFIG" ]; then
     echo "Backing up existing SSH config to: $BACKUP_CONFIG"
     cp "$SSH_CONFIG" "$BACKUP_CONFIG"
+    
+    # Remove old project configurations
+    sed -i.tmp '/# Oracle PostgreSQL Migration Project/,/^$/d' "$SSH_CONFIG"
+    sed -i.tmp '/^Host on-premises-app$/,/^$/d' "$SSH_CONFIG"
+    sed -i.tmp '/^Host cloud-app$/,/^$/d' "$SSH_CONFIG"
+    sed -i.tmp '/^Host onprem-oracle$/,/^$/d' "$SSH_CONFIG"
+    rm -f "$SSH_CONFIG.tmp"
 fi
 
 # Append new configuration

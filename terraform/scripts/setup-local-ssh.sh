@@ -107,7 +107,7 @@ echo ""
 echo "=== Deploying Application to EC2 Instances ==="
 echo ""
 
-DEPLOY_SCRIPT="$(cd "$(dirname "$0")" && pwd)/deploy-app.sh"
+DEPLOY_SCRIPT="$(dirname "$0")/deploy-app.sh"
 
 echo "Deploying to on-premises-app..."
 ssh -o ConnectTimeout=30 on-premises-app "bash -s" < "$DEPLOY_SCRIPT"

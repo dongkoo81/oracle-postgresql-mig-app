@@ -65,6 +65,8 @@ resource "aws_instance" "onprem_oracle" {
   key_name               = aws_key_pair.ec2_key.key_name
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
+  user_data = file("${path.module}/userdata/oracle.sh")
+
   root_block_device {
     volume_size = 200
     volume_type = "gp3"

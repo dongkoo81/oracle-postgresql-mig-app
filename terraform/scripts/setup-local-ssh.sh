@@ -17,6 +17,8 @@ ON_PREM_APP_ID=$(terraform output -raw on_premises_app_instance_id)
 CLOUD_APP_ID=$(terraform output -raw cloud_app_instance_id)
 ORACLE_ID=$(terraform output -raw onprem_oracle_instance_id)
 PRIVATE_KEY_PATH=$(terraform output -raw private_key_path)
+# Convert to absolute path
+PRIVATE_KEY_PATH=$(cd "$(dirname "$PRIVATE_KEY_PATH")" && pwd)/$(basename "$PRIVATE_KEY_PATH")
 
 echo "Terraform outputs retrieved:"
 echo "  Region: $REGION"

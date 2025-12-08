@@ -40,7 +40,13 @@ done
 dnf install -y postgresql16
 
 # Install Oracle Instant Client dependencies
-dnf install -y libaio libnsl wget unzip
+dnf clean all
+rm -rf /var/cache/dnf/*
+dnf install -y libaio libnsl wget unzip || {
+  echo "First attempt failed, retrying..."
+  dnf clean all
+  dnf install -y libaio libnsl wget unzip
+}
 
 # Download and install Oracle Instant Client
 cd /tmp

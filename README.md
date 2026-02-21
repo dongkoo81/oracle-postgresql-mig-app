@@ -374,7 +374,19 @@ curl -X POST "http://localhost:8080/api/orders" \
   -H "Content-Type: application/json" \
   -d '{"orderNo":"TEST-001","orderDate":"2026-02-21","notes":"Trigger Test"}'
 
-# 18-20. Sequence, BLOB, DUAL, NVL은 다른 API에 포함되어 자동 테스트됨
+# 18. Sequence (자동 증가 PK) - 모든 INSERT에서 자동 사용
+curl "http://localhost:8080/api/products"
+
+# 19. BLOB - CLOB API와 동일 테이블 (PRODUCT_DOCUMENT)
+curl "http://localhost:8080/api/test/oracle/documents/product/1"
+
+# 20. DUAL - Stored Function 호출 시 자동 사용
+# DECODE 함수 테스트 시 "SELECT GET_PRODUCT_STATUS(1) FROM DUAL" 실행됨
+curl "http://localhost:8080/api/test/oracle/decode/product-status/1"
+
+# 추가: NVL - Stored Procedure/Function 내부에서 자동 사용
+# - Stored Function (테스트 #2): CHECK_PRODUCT_AVAILABLE 함수 내부에서 NVL 사용
+# - Stored Procedure (테스트 #3): CALCULATE_ORDER_TOTAL 프로시저 내부에서 NVL 사용
 ```
 
 ---

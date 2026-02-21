@@ -225,28 +225,6 @@ server:
 | 품질검사 이력 | http://localhost:8080/quality | Partition Table, ROWNUM (2개) |
 | Oracle 특화 기능 | http://localhost:8080/oracle-features | Stored Function, CONNECT BY, XMLType, Materialized View, MERGE, DECODE, DUAL (8개) |
 
-### API 엔드포인트 (Oracle 특화 기능 테스트)
-
-#### 기본 기능
-- `GET /api/test/oracle/querydsl/search` - QueryDSL 동적 검색
-- `GET /api/test/oracle/function/check-available` - Stored Function (재고 확인)
-- `POST /api/test/oracle/procedure/calculate-total/{orderId}` - Stored Procedure (금액 계산)
-- `GET /api/test/oracle/hierarchy/{orderId}` - CONNECT BY (계층 쿼리)
-- `POST /api/test/oracle/clob/save` - CLOB (대용량 텍스트)
-- `POST /api/test/oracle/xml/save` - XMLType (XML 저장)
-- `GET /api/test/oracle/materialized-view` - Materialized View 조회
-- `POST /api/test/oracle/materialized-view/refresh` - MView Refresh
-- `GET /api/test/oracle/decode/product-status/{productId}` - DECODE 함수
-- `POST /api/test/oracle/merge/inventory` - MERGE 문
-
-#### 추가된 기능 (PostgreSQL 마이그레이션 대비)
-- `GET /api/test/oracle/sysdate/today-products` - SYSDATE 사용
-- `GET /api/test/oracle/to-date/search?startDate=2024-01-01&endDate=2024-12-31` - TO_DATE 날짜 검색
-- `GET /api/test/oracle/rownum/top-products?limit=5` - ROWNUM 직접 페이징
-- `GET /api/test/oracle/sequence/nextval?sequenceName=PRODUCT_SEQ` - Sequence NEXTVAL 직접 호출
-- `GET /api/test/oracle/minus/products-without-inventory` - MINUS 집합 연산
-- `GET /api/test/oracle/outer-join/products-inventory` - (+) Outer Join 구식 문법
-
 ---
 
 ## PostgreSQL 마이그레이션 시 예상 문제점

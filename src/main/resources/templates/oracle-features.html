@@ -42,16 +42,18 @@
     <div class="container">
         <div class="header">
             <a href="/" class="back-link">← 홈으로</a>
-            <h1>🔧 Oracle 특화 기능</h1>
-            <p>Oracle 19c의 고급 기능을 실제로 사용해보세요</p>
+            <h1>🔧 Oracle 특화 기능 체험</h1>
+            <p>Oracle 19c만의 강력한 기능들을 직접 사용해보세요</p>
         </div>
 
         <div class="grid">
             <!-- 1. QueryDSL 동적 검색 -->
             <div class="card">
-                <h3>📦 제품 검색 (QueryDSL)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> QueryDSL 동적 쿼리, WHERE 조건 동적 생성
+                <h3>📦 제품 검색</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    제품명, 가격 범위 등 다양한 조건을 조합하여 원하는 제품을 빠르게 찾을 수 있습니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: QueryDSL 동적 쿼리 생성</span>
                 </p>
                 <div class="form-group">
                     <label>제품명</label>
@@ -72,9 +74,11 @@
 
             <!-- 2. Stored Function - 재고 확인 -->
             <div class="card">
-                <h3>📊 재고 가용성 확인 (Stored Function)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> Stored Function (CHECK_PRODUCT_AVAILABLE), RETURN 값 반환
+                <h3>📊 재고 가용성 확인</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    주문 전에 재고가 충분한지 실시간으로 확인할 수 있습니다. 복잡한 재고 계산 로직이 DB에서 처리됩니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: Stored Function (CHECK_PRODUCT_AVAILABLE)</span>
                 </p>
                 <div class="form-group">
                     <label>제품 선택</label>
@@ -93,9 +97,11 @@
 
             <!-- 3. Stored Procedure - 주문 금액 계산 -->
             <div class="card">
-                <h3>💰 주문 금액 계산 (Stored Procedure)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> Stored Procedure (CALCULATE_ORDER_TOTAL), OUT 파라미터
+                <h3>💰 주문 금액 자동 계산</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    주문의 모든 상세 항목을 자동으로 집계하여 총 금액을 계산합니다. 할인, 세금 등 복잡한 계산도 가능합니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: Stored Procedure (CALCULATE_ORDER_TOTAL)</span>
                 </p>
                 <div class="form-group">
                     <label>주문 선택</label>
@@ -110,9 +116,11 @@
 
             <!-- 4. CONNECT BY - 생산 이력 -->
             <div class="card">
-                <h3>🔗 생산 이력 조회 (CONNECT BY)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> CONNECT BY 계층 쿼리, START WITH, PRIOR (트리 구조)
+                <h3>🔗 생산 이력 추적</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    제품이 어떤 공정을 거쳐 생산되었는지 트리 구조로 확인할 수 있습니다. 품질 문제 발생 시 원인 추적에 유용합니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: CONNECT BY 계층 쿼리 (트리 구조 조회)</span>
                 </p>
                 <div class="form-group">
                     <label>주문 선택</label>
@@ -127,9 +135,11 @@
 
             <!-- 5. CLOB - 문서 관리 -->
             <div class="card">
-                <h3>📄 문서 관리 (CLOB)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> CLOB (4GB 대용량 텍스트), @Lob 어노테이션
+                <h3>📄 대용량 문서 관리</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    매뉴얼, 사양서 등 긴 문서를 제한 없이 저장하고 관리할 수 있습니다. 최대 4GB까지 저장 가능합니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: CLOB (Character Large Object)</span>
                 </p>
                 <div class="form-group">
                     <label>제품 선택</label>
@@ -163,9 +173,11 @@
 
             <!-- 6. XMLType - 제품 사양 -->
             <div class="card">
-                <h3>📋 제품 사양 (XMLType)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> XMLType 컬럼, XML 검증, XPath 쿼리
+                <h3>📋 제품 사양 관리 (XML)</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    제품의 상세 사양을 구조화된 XML 형식으로 저장하고, 자동으로 형식을 검증할 수 있습니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: XMLType (XML 전용 데이터 타입)</span>
                 </p>
                 <div class="form-group">
                     <label>제품 선택</label>
@@ -191,9 +203,11 @@
 
             <!-- 7. Materialized View - 일일 요약 -->
             <div class="card" style="grid-column: 1 / -1;">
-                <h3>📈 일일 주문 요약 (Materialized View)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                    🔧 <strong>Oracle 기능:</strong> Materialized View (물리적 저장), REFRESH ON DEMAND, 집계 쿼리 성능 최적화
+                <h3>📈 일일 주문 통계 대시보드</h3>
+                <p style="font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5;">
+                    <strong>💡 이 기능으로 할 수 있는 것:</strong><br>
+                    매일의 주문 건수와 총 금액을 빠르게 조회할 수 있습니다. 복잡한 집계 쿼리를 미리 계산해두어 조회 속도가 매우 빠릅니다.<br>
+                    <span style="color: #667eea;">🔧 Oracle 기술: Materialized View (물리적으로 저장되는 뷰)</span>
                 </p>
                 <button onclick="viewSummary()">요약 조회</button>
                 <button onclick="refreshMView()" style="background: #28a745; margin-left: 10px;">🔄 MView Refresh</button>

@@ -139,4 +139,43 @@ public class OracleFeatureTestController {
         result.put("message", "Inventory merged successfully");
         return result;
     }
+    
+    // 14. SYSDATE 테스트 - 오늘 생성된 제품 조회
+    @GetMapping("/sysdate/today-products")
+    public List<Product> testSysdate() {
+        return productRepository.findProductsCreatedToday();
+    }
+    
+    // 15. TO_DATE 테스트 - 날짜 범위 검색
+    @GetMapping("/to-date/search")
+    public List<Map<String, Object>> testToDate(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        return orderMapper.findOrdersByDateRange(startDate, endDate);
+    }
+    
+    // 16. ROWNUM 테스트 - 직접 페이징
+    @GetMapping("/rownum/top-products")
+    public List<Product> testRownum(@RequestParam(defaultValue = "5") Integer limit) {
+        return productRepository.findTopProductsByRownum(limit);
+    }
+    
+    // 17. Sequence NEXTVAL 테스트 - 직접 호출
+    @GetMapping("/sequence/nextval")
+    public Map<String, Object> testSequenceNextval(@RequestParam String sequenceName) {
+        Long nextVal = productRepository.getSequenceNextVal(sequenceName);
+        return Map.of("sequenceName", sequenceName, "nextVal", nextVal);
+    }
+    
+    // 18. MINUS 테스트 - 집합 연산
+    @GetMapping("/minus/products-without-inventory")
+    public List<Product> testMinus() {
+        return productRepository.findProductsWithoutInventory();
+    }
+    
+    // 19. (+) Outer Join 테스트 - 구식 문법
+    @GetMapping("/outer-join/products-inventory")
+    public List<Map<String, Object>> testOuterJoin() {
+        return productRepository.findProductsWithInventoryOldStyle();
+    }
 }

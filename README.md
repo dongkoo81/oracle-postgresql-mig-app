@@ -191,33 +191,61 @@ server:
   port: 8080  # 원하는 포트로 변경
 ```
 
-## Oracle 특화 기능
+## Oracle 특화 기능 (총 20개)
 
-- **Sequence**: 모든 PK 자동 생성
-- **Trigger**: 주문 생성 시 이력 자동 기록
-- **CLOB**: 대용량 텍스트 (NOTES, DOC_CONTENT)
-- **BLOB**: 바이너리 파일 (DOC_FILE)
-- **BFILE**: 외부 파일 참조 (EXTERNAL_FILE)
-- **XMLType**: XML 문서 (SPEC_XML)
-- **CONNECT BY**: 계층 쿼리 (PRODUCTION_HISTORY)
-- **Stored Procedure**: CALCULATE_ORDER_TOTAL, MERGE_INVENTORY
-- **Stored Function**: CHECK_PRODUCT_AVAILABLE, GET_PRODUCT_STATUS, GET_TOP_PRODUCTS
-- **Materialized View**: DAILY_SUMMARY (REFRESH ON DEMAND)
-- **Partition Table**: QUALITY_INSPECTION (Range + List Composite Partition)
-- **NVL**: NULL 값 처리 (프로시저/함수 내)
-- **DECODE**: 조건부 값 반환 (GET_PRODUCT_STATUS)
-- **ROWNUM**: 페이징 처리 (Hibernate 자동 사용)
-- **MERGE**: UPSERT 작업 (MERGE_INVENTORY)
-- **DUAL**: 함수 호출용 더미 테이블
+### 구현된 기능 목록
+
+1. **Sequence** - 모든 PK 자동 생성 + NEXTVAL 직접 호출
+2. **Trigger** - 주문 생성 시 이력 자동 기록
+3. **CLOB** - 대용량 텍스트 (NOTES, DOC_CONTENT)
+4. **BLOB** - 바이너리 파일 (DOC_FILE)
+5. **XMLType** - XML 문서 (SPEC_XML)
+6. **CONNECT BY** - 계층 쿼리 (PRODUCTION_HISTORY)
+7. **Stored Procedure** - CALCULATE_ORDER_TOTAL, MERGE_INVENTORY
+8. **Stored Function** - CHECK_PRODUCT_AVAILABLE, GET_PRODUCT_STATUS, GET_TOP_PRODUCTS
+9. **Materialized View** - DAILY_SUMMARY (REFRESH ON DEMAND)
+10. **Partition Table** - QUALITY_INSPECTION (Range + List Composite Partition)
+11. **NVL** - NULL 값 처리 (프로시저/함수 내)
+12. **DECODE** - 조건부 값 반환 (GET_PRODUCT_STATUS)
+13. **ROWNUM** - 페이징 처리 (직접 사용 + Hibernate 자동)
+14. **MERGE** - UPSERT 작업 (MERGE_INVENTORY)
+15. **DUAL** - 함수 호출용 더미 테이블
+16. **SYSDATE** - 현재 날짜/시간 (Native Query)
+17. **TO_DATE** - 날짜 변환 및 검색
+18. **MINUS** - 집합 연산 (차집합)
+19. **(+) Outer Join** - 구식 Outer Join 문법
+20. **QueryDSL** - 동적 쿼리 생성
 
 ### 화면별 Oracle 특화 기능
 
-| 화면 | URL | 포함된 Oracle 기능 |
+| 화면 | URL | 포함된 Oracle 기능 (개수) |
 |------|-----|-------------------|
-| 제품 관리 | http://localhost:8080/products | Sequence (PK 자동생성), ROWNUM (페이징) |
-| 작업지시 관리 | http://localhost:8080/orders | Stored Procedure (금액 계산), Trigger (이력 자동생성), CLOB (대용량 메모) |
-| 품질검사 이력 | http://localhost:8080/quality | Partition Table (Range+List), ROWNUM (페이징) |
-| Oracle 특화 기능 | http://localhost:8080/oracle-features | Stored Function (재고 확인, NVL), Stored Procedure (금액 계산, NVL), CONNECT BY (계층 쿼리), CLOB (문서 관리), XMLType (제품 사양), Materialized View (일일 요약, Refresh), DECODE (상태 확인), MERGE (재고 UPSERT) |
+| 제품 관리 | http://localhost:8080/products | Sequence (2개) |
+| 작업지시 관리 | http://localhost:8080/orders | Stored Procedure, Trigger, CLOB, NVL (4개) |
+| 품질검사 이력 | http://localhost:8080/quality | Partition Table, ROWNUM (2개) |
+| Oracle 특화 기능 | http://localhost:8080/oracle-features | Stored Function, CONNECT BY, XMLType, Materialized View, MERGE, DECODE, DUAL (8개) |
+
+### API 엔드포인트 (Oracle 특화 기능 테스트)
+
+#### 기본 기능
+- `GET /api/test/oracle/querydsl/search` - QueryDSL 동적 검색
+- `GET /api/test/oracle/function/check-available` - Stored Function (재고 확인)
+- `POST /api/test/oracle/procedure/calculate-total/{orderId}` - Stored Procedure (금액 계산)
+- `GET /api/test/oracle/hierarchy/{orderId}` - CONNECT BY (계층 쿼리)
+- `POST /api/test/oracle/clob/save` - CLOB (대용량 텍스트)
+- `POST /api/test/oracle/xml/save` - XMLType (XML 저장)
+- `GET /api/test/oracle/materialized-view` - Materialized View 조회
+- `POST /api/test/oracle/materialized-view/refresh` - MView Refresh
+- `GET /api/test/oracle/decode/product-status/{productId}` - DECODE 함수
+- `POST /api/test/oracle/merge/inventory` - MERGE 문
+
+#### 추가된 기능 (PostgreSQL 마이그레이션 대비)
+- `GET /api/test/oracle/sysdate/today-products` - SYSDATE 사용
+- `GET /api/test/oracle/to-date/search?startDate=2024-01-01&endDate=2024-12-31` - TO_DATE 날짜 검색
+- `GET /api/test/oracle/rownum/top-products?limit=5` - ROWNUM 직접 페이징
+- `GET /api/test/oracle/sequence/nextval?sequenceName=PRODUCT_SEQ` - Sequence NEXTVAL 직접 호출
+- `GET /api/test/oracle/minus/products-without-inventory` - MINUS 집합 연산
+- `GET /api/test/oracle/outer-join/products-inventory` - (+) Outer Join 구식 문법
 
 ---
 

@@ -31,4 +31,16 @@
         )}
     </update>
 
+    <!-- TO_DATE 테스트: 날짜 범위 검색 -->
+    <select id="findOrdersByDateRange" resultType="java.util.HashMap">
+        SELECT 
+            ORDER_ID as orderId,
+            ORDER_NO as orderNo,
+            ORDER_DATE as orderDate,
+            TOTAL_AMOUNT as totalAmount
+        FROM PRODUCTION_ORDER
+        WHERE ORDER_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        ORDER BY ORDER_DATE DESC
+    </select>
+
 </mapper>

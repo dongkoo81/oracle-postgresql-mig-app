@@ -197,47 +197,28 @@ server:
 
 ### Oracle 특화 기능 테스트 API
 
-개발자용 직접 API 호출 (Postman, curl 등):
+| # | API | 기능 | 사용 테이블 |
+|---|-----|------|------------|
+| 1 | `POST /api/test/oracle/procedure/calculate-total/1` | Stored Procedure (NVL) | PRODUCTION_ORDER, ORDER_DETAIL |
+| 2 | `GET /api/test/oracle/function/check-available?productId=1&requiredQty=10` | Stored Function (NVL) | INVENTORY, PRODUCT |
+| 3 | `GET /api/test/oracle/hierarchy/1` | CONNECT BY 계층 쿼리 | PRODUCTION_HISTORY |
+| 4 | `GET /api/test/oracle/querydsl/search?name=Engine&minPrice=100000&maxPrice=200000` | QueryDSL 동적 검색 | PRODUCT |
+| 5 | `POST /api/test/oracle/clob/save?productId=1&content=Large%20text` | CLOB 저장 | PRODUCT_DOCUMENT |
+| 6 | `POST /api/test/oracle/xml/save?productId=1&xmlContent=<spec>...</spec>` | XMLType 저장 | PRODUCT_SPEC |
+| 7 | `GET /api/test/oracle/materialized-view` | Materialized View 조회 | DAILY_SUMMARY |
+| 8 | `POST /api/test/oracle/materialized-view/refresh` | Materialized View Refresh | DAILY_SUMMARY |
+| 9 | `GET /api/test/oracle/partition/PASS` | Partition Table 조회 | QUALITY_INSPECTION |
+| 10 | `GET /api/test/oracle/decode/product-status/1` | DECODE 함수 | INVENTORY |
+| 11 | `POST /api/test/oracle/merge/inventory?productId=1&quantity=50` | MERGE 문 (UPSERT) | INVENTORY |
 
+**사용 방법:**
 ```bash
-# 1. Stored Procedure - 주문 금액 계산 (NVL 사용)
+# 예시: Stored Procedure 테스트
 curl -X POST http://localhost:8080/api/test/oracle/procedure/calculate-total/1
 
-# 2. Stored Function - 재고 가용성 체크
-curl "http://localhost:8080/api/test/oracle/function/check-available?productId=1&requiredQty=10"
-
-# 3. CONNECT BY - 계층 쿼리
-curl http://localhost:8080/api/test/oracle/hierarchy/1
-
-# 4. QueryDSL - 동적 검색
+# 예시: QueryDSL 동적 검색
 curl "http://localhost:8080/api/test/oracle/querydsl/search?name=Engine&minPrice=100000&maxPrice=200000"
-
-# 5. CLOB - 대용량 텍스트 저장
-curl -X POST "http://localhost:8080/api/test/oracle/clob/save?productId=1&content=Large%20text%20content"
-
-# 6. XMLType - XML 저장
-curl -X POST "http://localhost:8080/api/test/oracle/xml/save?productId=1&xmlContent=<spec><version>1.0</version></spec>"
-
-# 7. Materialized View - 조회
-curl http://localhost:8080/api/test/oracle/materialized-view
-
-# 8. Materialized View - Refresh
-curl -X POST http://localhost:8080/api/test/oracle/materialized-view/refresh
-
-# 9. Partition Table - 파티션별 조회 (PASS)
-curl http://localhost:8080/api/test/oracle/partition/PASS
-
-# 10. Partition Table - 파티션별 조회 (FAIL)
-curl http://localhost:8080/api/test/oracle/partition/FAIL
-
-# 11. Partition Table - 파티션별 조회 (PENDING)
-curl http://localhost:8080/api/test/oracle/partition/PENDING
-
-# 12. DECODE 함수 - 제품 상태 확인
-curl http://localhost:8080/api/test/oracle/decode/product-status/1
-
-# 13. MERGE 문 - 재고 업데이트 (UPSERT)
-curl -X POST "http://localhost:8080/api/test/oracle/merge/inventory?productId=1&quantity=50"
+```
 ```
 
 **권장 사용 방법:**
@@ -425,64 +406,6 @@ $$ LANGUAGE plpgsql;
 - `http://localhost:8080/orders` - 작업지시 관리 (Stored Procedure, Trigger, CLOB)
 - `http://localhost:8080/quality` - 품질검사 이력 (파티션 테이블 - Range + List Composite)
 - `http://localhost:8080/oracle-features` - Oracle 특화 기능 (실제 UI)
-
----
-
-## Oracle 특화 기능 테스트 API별 사용 테이블 정리
-
-### 1. POST /api/test/oracle/procedure/calculate-total/{orderId}
-   - **Stored Procedure 테스트 (NVL 사용)**
-   - 사용 테이블:
-     - PRODUCTION_ORDER (주문 정보)
-     - ORDER_DETAIL (주문 상세)
-
-### 2. GET /api/test/oracle/function/check-available
-   - **Stored Function 테스트 (NVL 사용)**
-   - 사용 테이블:
-     - INVENTORY (재고 정보)
-     - PRODUCT (제품 정보)
-
-### 3. GET /api/test/oracle/hierarchy/{orderId}
-   - **CONNECT BY 계층 쿼리 테스트**
-   - 사용 테이블:
-     - PRODUCTION_HISTORY (생산 이력 - 자기 참조)
-
-### 4. GET /api/test/oracle/querydsl/search
-   - **QueryDSL 동적 쿼리 테스트**
-   - 사용 테이블:
-     - PRODUCT (제품 검색)
-
-### 5. POST /api/test/oracle/clob/save
-   - **CLOB 저장 테스트**
-   - 사용 테이블:
-     - PRODUCT_DOCUMENT (DOC_CONTENT 컬럼 - CLOB)
-
-### 6. POST /api/test/oracle/xml/save
-   - **XML 저장 테스트**
-   - 사용 테이블:
-     - PRODUCT_SPEC (SPEC_XML 컬럼 - CLOB/XMLType)
-
-### 7. GET /api/test/oracle/materialized-view
-   - **Materialized View 조회 테스트**
-   - 사용 테이블:
-     - DAILY_SUMMARY (일일 요약 - Materialized View)
-
-### 8. GET /api/test/oracle/partition/{result}
-   - **Partition Table 조회 테스트**
-   - 사용 테이블:
-     - QUALITY_INSPECTION (품질 검사 이력 - Range + List Composite Partition)
-
-### 9. GET /api/test/oracle/decode/product-status/{productId}
-   - **DECODE 함수 테스트**
-   - 사용 테이블:
-     - INVENTORY (재고 정보)
-   - 기능: 재고 수량에 따라 상태 반환 (HIGH_STOCK, NORMAL, LOW_STOCK, OUT_OF_STOCK)
-
-### 10. POST /api/test/oracle/merge/inventory
-   - **MERGE 문 테스트 (UPSERT)**
-   - 사용 테이블:
-     - INVENTORY (재고 정보)
-   - 기능: 재고가 있으면 UPDATE, 없으면 INSERT
 
 ---
 

@@ -190,7 +190,7 @@ server:
 | 제품 관리 | http://localhost:8080/products | Sequence (PK 자동생성), QueryDSL (동적 검색), ROWNUM (페이징) |
 | 작업지시 관리 | http://localhost:8080/orders | Stored Procedure (금액 계산), Trigger (이력 자동생성), CLOB (대용량 메모) |
 | 품질검사 이력 | http://localhost:8080/quality | Partition Table (Range+List), ROWNUM (페이징) |
-| Oracle 특화 기능 | http://localhost:8080/oracle-features | 모든 Oracle 기능 통합 테스트 화면 |
+| Oracle 특화 기능 | http://localhost:8080/oracle-features | QueryDSL 동적 검색, Stored Function (재고 확인), Stored Procedure (금액 계산, NVL), CONNECT BY (계층 쿼리), CLOB (문서 관리), XMLType (제품 사양), Materialized View (일일 요약, Refresh), DECODE (상태 확인), MERGE (재고 UPSERT) |
 
 ---
 

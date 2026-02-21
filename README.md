@@ -514,7 +514,7 @@ $$ LANGUAGE plpgsql;
 ## 구현 완료 현황
 
 ### ✅ 전체 기능 구현 완료
-총 9개 테이블, 14개 Oracle 특화 기능 모두 구현 및 테스트 완료
+총 9개 테이블, 20개 Oracle 특화 기능 모두 구현 및 테스트 완료
 
 ### 테이블 목록
 1. ✅ PRODUCT - Sequence, JPA
@@ -527,20 +527,26 @@ $$ LANGUAGE plpgsql;
 8. ✅ QUALITY_INSPECTION - Partition Table (Range + List Composite)
 9. ✅ DAILY_SUMMARY - Materialized View
 
-### Oracle 특화 기능
-1. ✅ Sequence - 자동 증가 PK
+### Oracle 특화 기능 (20개)
+1. ✅ Sequence - 자동 증가 PK + NEXTVAL 직접 호출
 2. ✅ Stored Procedure - CALCULATE_ORDER_TOTAL, MERGE_INVENTORY
 3. ✅ Stored Function - CHECK_PRODUCT_AVAILABLE, GET_PRODUCT_STATUS, GET_TOP_PRODUCTS
 4. ✅ Trigger - 주문 생성 시 이력 자동 기록
 5. ✅ CONNECT BY - 계층 구조 쿼리
 6. ✅ CLOB - 4GB 대용량 텍스트
-7. ✅ XMLType - XML 데이터 저장 및 검증
-8. ✅ Materialized View - REFRESH ON DEMAND
-9. ✅ Partition Table - Range + List Composite Partition
-10. ✅ NVL - NULL 값 처리 (CALCULATE_ORDER_TOTAL, CHECK_PRODUCT_AVAILABLE)
-11. ✅ DECODE - 조건부 값 반환 (GET_PRODUCT_STATUS)
-12. ✅ ROWNUM - 페이징 처리 (Hibernate 자동 사용)
-13. ✅ MERGE - UPSERT 작업 (MERGE_INVENTORY)
-14. ✅ DUAL - 함수 호출용 더미 테이블
+7. ✅ BLOB - 바이너리 파일
+8. ✅ XMLType - XML 데이터 저장 및 검증
+9. ✅ Materialized View - REFRESH ON DEMAND
+10. ✅ Partition Table - Range + List Composite Partition
+11. ✅ NVL - NULL 값 처리 (프로시저/함수 내)
+12. ✅ DECODE - 조건부 값 반환 (GET_PRODUCT_STATUS)
+13. ✅ ROWNUM - 페이징 처리 (직접 사용 + Hibernate 자동)
+14. ✅ MERGE - UPSERT 작업 (MERGE_INVENTORY)
+15. ✅ DUAL - 함수 호출용 더미 테이블
+16. ✅ SYSDATE - 현재 날짜/시간 (Native Query)
+17. ✅ TO_DATE - 날짜 변환 및 검색
+18. ✅ MINUS - 집합 연산 (차집합)
+19. ✅ (+) Outer Join - 구식 Outer Join 문법
+20. ✅ QueryDSL - 동적 쿼리 생성
 
 

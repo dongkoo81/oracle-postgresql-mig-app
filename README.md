@@ -12,29 +12,29 @@ Oracle 19c 기반 제조 실행 시스템(MES) 애플리케이션
 ### 연결 정보
 - **호스트**:  xxxx
 - **포트**: 1521
-- **서비스명**: oracle19c
+- **서비스명**: ORCLPDB1 (Docker 환경)
 - **사용자**: mesuser / mespass
 
 ### 데이터베이스 초기화
 
 1. **사용자 생성** (system 계정으로 실행)
 ```bash
-sqlplus system/system@xxxx:1521/oracle19c @sql/01_create_user.sql
+sqlplus system/system@xxxx:1521/ORCLPDB1 @sql/01_create_user.sql
 ```
 
 2. **테이블 생성** (mesuser 계정으로 실행)
 ```bash
-sqlplus mesuser/mespass@xxxx:1521/oracle19c @sql/schema/02_create_tables.sql
+sqlplus mesuser/mespass@xxxx:1521/ORCLPDB1 @sql/schema/02_create_tables.sql
 ```
 
 3. **프로시저, 트리거, Materialized View 생성**
 ```bash
-sqlplus mesuser/mespass@xxx:1521/oracle19c @sql/procedures/03_create_procedures.sql
+sqlplus mesuser/mespass@xxxx:1521/ORCLPDB1 @sql/procedures/03_create_procedures.sql
 ```
 
 4. **샘플 데이터 삽입**
 ```bash
-sqlplus mesuser/mespass@xxx:1521/oracle19c @sql/data/04_insert_sample_data.sql
+sqlplus mesuser/mespass@xxxx:1521/ORCLPDB1 @sql/data/04_insert_sample_data.sql
 ```
 
 ## 프로젝트 구조
@@ -69,7 +69,7 @@ autoever/
 ### 사전 요구사항
 - JDK 17 이상
 - Gradle 8.5 이상
-- Oracle 19c 데이터베이스 (xxxx:1521/oracle19c)
+- Oracle 19c 데이터베이스 (xxxx:1521/ORCLPDB1)
 
 ### 빌드
 ```bash

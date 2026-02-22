@@ -23,7 +23,7 @@ public class ProductSpec {
     private Long productId;
     
     @Lob
-    @Column(name = "SPEC_XML")
+    @Column(name = "SPEC_XML", columnDefinition = "XMLTYPE")
     private String specXml;
     
     @Column(name = "VERSION", length = 20)

@@ -54,10 +54,28 @@ VALUES (PRODUCTION_HISTORY_SEQ.NEXTVAL, 1, 3, 'Quality Check', SYSTIMESTAMP);
 INSERT INTO PRODUCTION_HISTORY (HISTORY_ID, ORDER_ID, PARENT_ID, PROCESS_NAME, PROCESS_DATE)
 VALUES (PRODUCTION_HISTORY_SEQ.NEXTVAL, 1, 4, 'Packaging', SYSTIMESTAMP);
 
+-- Product Document Data (CLOB/BLOB)
+INSERT INTO PRODUCT_DOCUMENT (DOC_ID, PRODUCT_ID, DOC_NAME, DOC_CONTENT, DOC_FILE, CREATED_DATE)
+VALUES (PRODUCT_DOCUMENT_SEQ.NEXTVAL, 1, 'Engine Specification', 
+'This is a detailed specification document for Engine Part A. 
+It includes technical specifications, installation guidelines, and maintenance procedures.',
+NULL, SYSDATE);
+
+INSERT INTO PRODUCT_DOCUMENT (DOC_ID, PRODUCT_ID, DOC_NAME, DOC_CONTENT, DOC_FILE, CREATED_DATE)
+VALUES (PRODUCT_DOCUMENT_SEQ.NEXTVAL, 2, 'Transmission Manual', 
+'Transmission Part B installation and operation manual. 
+Contains step-by-step instructions and troubleshooting guide.',
+NULL, SYSDATE);
+
+INSERT INTO PRODUCT_DOCUMENT (DOC_ID, PRODUCT_ID, DOC_NAME, DOC_CONTENT, DOC_FILE, CREATED_DATE)
+VALUES (PRODUCT_DOCUMENT_SEQ.NEXTVAL, 3, 'Brake Pad Safety Guide', 
+'Safety guidelines and replacement procedures for Brake Pad C.',
+NULL, SYSDATE);
+
 -- Product Spec Data (XML)
 INSERT INTO PRODUCT_SPEC (SPEC_ID, PRODUCT_ID, SPEC_XML, VERSION, CREATED_DATE)
 VALUES (PRODUCT_SPEC_SEQ.NEXTVAL, 1, 
-'<spec>
+XMLTYPE('<spec>
   <version>1.0</version>
   <category>Engine</category>
   <properties>
@@ -68,7 +86,7 @@ VALUES (PRODUCT_SPEC_SEQ.NEXTVAL, 1,
   <dimensions>
     <weight>180kg</weight>
   </dimensions>
-</spec>',
+</spec>'),
 '1.0', SYSDATE);
 
 -- Quality Inspection Data (Partitioned Table)

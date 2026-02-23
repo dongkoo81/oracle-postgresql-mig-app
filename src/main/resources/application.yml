@@ -7,8 +7,9 @@ spring:
       enabled: false
   
   datasource:
-    url: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
+    # url: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
     # url: jdbc:oracle:thin:@//proxy.mes.db:5432/oracle19c  # HAProxy 사용 시
+    url: jdbc:postgresql://apg17.cluster-cmjs2qxaojzn.ap-northeast-2.rds.amazonaws.com:5432/mesdb
     username: mesuser
     password: mespass
     driver-class-name: oracle.jdbc.OracleDriver
@@ -19,10 +20,12 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
-      connection-test-query: SELECT 1 FROM DUAL
+      # connection-test-query: SELECT 1 FROM DUAL
+      connection-test-query: SELECT 1 
   
   jpa:
-    database-platform: org.hibernate.dialect.Oracle12cDialect
+    # database-platform: org.hibernate.dialect.Oracle12cDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true

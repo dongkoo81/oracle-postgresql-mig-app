@@ -4,28 +4,28 @@
 
     <!-- Stored Procedure: CALCULATE_ORDER_TOTAL -->
     <select id="calculateOrderTotal" statementType="CALLABLE">
-        {CALL CALCULATE_ORDER_TOTAL(
-            #{orderId, mode=IN, jdbcType=NUMERIC},
-            #{result.totalAmount, mode=OUT, jdbcType=NUMERIC}
-        )}
+    CALL CALCULATE_ORDER_TOTAL(
+    #{orderId, mode=IN, jdbcType=NUMERIC},
+    #{result.totalAmount, mode=OUT, jdbcType=NUMERIC}
+    )
     </select>
 
     <!-- Stored Function: CHECK_PRODUCT_AVAILABLE -->
     <select id="checkProductAvailable" resultType="java.lang.Integer">
-        SELECT CHECK_PRODUCT_AVAILABLE(#{productId}, #{requiredQty}) FROM DUAL
+        SELECT CHECK_PRODUCT_AVAILABLE(#{productId}, #{requiredQty})
     </select>
 
     <!-- Stored Function: GET_PRODUCT_STATUS (DECODE 사용) -->
     <select id="getProductStatus" resultType="java.lang.String">
-        SELECT GET_PRODUCT_STATUS(#{productId}) AS status FROM DUAL
+        SELECT GET_PRODUCT_STATUS(#{productId}) AS status 
     </select>
 
     <!-- Stored Procedure: MERGE_INVENTORY (MERGE 문 사용) -->
     <update id="mergeInventory" statementType="CALLABLE">
-        {CALL MERGE_INVENTORY(
+        CALL MERGE_INVENTORY(
             #{productId, mode=IN, jdbcType=NUMERIC},
             #{quantity, mode=IN, jdbcType=NUMERIC}
-        )}
+        )
     </update>
 
     <!-- TO_DATE 테스트: 날짜 범위 검색 -->

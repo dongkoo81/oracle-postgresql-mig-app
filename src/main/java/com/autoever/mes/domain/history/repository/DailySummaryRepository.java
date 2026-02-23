@@ -12,6 +12,6 @@ public interface DailySummaryRepository extends JpaRepository<DailySummary, Loca
     List<DailySummary> findBySummaryDateBetween(LocalDate startDate, LocalDate endDate);
     
     @Modifying
-    @Query(value = "BEGIN DBMS_MVIEW.REFRESH('DAILY_SUMMARY', 'C'); END;", nativeQuery = true)
+    @Query(value = "REFRESH MATERIALIZED VIEW DAILY_SUMMARY", nativeQuery = true)
     void refreshMaterializedView();
 }

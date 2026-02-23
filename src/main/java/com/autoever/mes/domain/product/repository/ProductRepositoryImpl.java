@@ -48,14 +48,14 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     
     @Override
     public List<Product> findProductsCreatedToday() {
-        String sql = "SELECT * FROM PRODUCT WHERE TRUNC(CREATED_DATE) = TRUNC(SYSDATE)";
+        String sql = "SELECT * FROM PRODUCT WHERE DATE(CREATED_DATE) = CURRENT_DATE";
         Query query = entityManager.createNativeQuery(sql, Product.class);
         return query.getResultList();
     }
     
     @Override
     public List<Product> findTopProductsByRownum(Integer limit) {
-        String sql = "SELECT * FROM (SELECT * FROM PRODUCT ORDER BY UNIT_PRICE DESC) WHERE ROWNUM <= :limit";
+        String sql = "SELECT * FROM PRODUCT ORDER BY UNIT_PRICE DESC LIMIT :limit";
         Query query = entityManager.createNativeQuery(sql, Product.class);
         query.setParameter("limit", limit);
         return query.getResultList();
@@ -63,14 +63,14 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     
     @Override
     public Long getSequenceNextVal(String sequenceName) {
-        String sql = "SELECT " + sequenceName + ".NEXTVAL FROM DUAL";
+        String sql = "SELECT NEXTVAL('" + sequenceName + "')";
         Query query = entityManager.createNativeQuery(sql);
         return ((Number) query.getSingleResult()).longValue();
     }
     
     @Override
     public List<Product> findProductsWithoutInventory() {
-        String sql = "SELECT * FROM PRODUCT MINUS SELECT p.* FROM PRODUCT p, INVENTORY i WHERE p.PRODUCT_ID = i.PRODUCT_ID";
+        String sql = "SELECT * FROM PRODUCT EXCEPT SELECT p.* FROM PRODUCT p, INVENTORY i WHERE p.PRODUCT_ID = i.PRODUCT_ID";
         Query query = entityManager.createNativeQuery(sql, Product.class);
         return query.getResultList();
     }
@@ -78,8 +78,8 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     @Override
     public List<Map<String, Object>> findProductsWithInventoryOldStyle() {
         String sql = "SELECT p.PRODUCT_ID, p.PRODUCT_CODE, p.PRODUCT_NAME, p.UNIT_PRICE, i.QUANTITY " +
-                     "FROM PRODUCT p, INVENTORY i " +
-                     "WHERE p.PRODUCT_ID = i.PRODUCT_ID(+) " +
+                     "FROM PRODUCT p " +
+                     "LEFT JOIN INVENTORY i ON p.PRODUCT_ID = i.PRODUCT_ID " +
                      "ORDER BY p.PRODUCT_ID";
         Query query = entityManager.createNativeQuery(sql);
         List<Object[]> results = query.getResultList();

@@ -4,17 +4,37 @@
 
     <!-- Oracle CONNECT BY 계층 쿼리 -->
     <select id="findHierarchyByOrderId" resultType="com.autoever.mes.domain.history.entity.ProductionHistory">
+        WITH RECURSIVE hierarchy AS (
+            SELECT 
+                HISTORY_ID,
+                ORDER_ID,
+                PARENT_ID,
+                PROCESS_NAME,
+                PROCESS_DATE,
+                1 as level
+            FROM PRODUCTION_HISTORY
+            WHERE ORDER_ID = #{orderId} AND PARENT_ID IS NULL
+            
+            UNION ALL
+            
+            SELECT 
+                ph.HISTORY_ID,
+                ph.ORDER_ID,
+                ph.PARENT_ID,
+                ph.PROCESS_NAME,
+                ph.PROCESS_DATE,
+                h.level + 1
+            FROM PRODUCTION_HISTORY ph
+            INNER JOIN hierarchy h ON ph.PARENT_ID = h.HISTORY_ID
+            WHERE ph.ORDER_ID = #{orderId}
+        )
         SELECT 
             HISTORY_ID as historyId,
             ORDER_ID as orderId,
             PARENT_ID as parentId,
             PROCESS_NAME as processName,
             PROCESS_DATE as processDate
-        FROM PRODUCTION_HISTORY
-        WHERE ORDER_ID = #{orderId}
-        START WITH PARENT_ID IS NULL
-        CONNECT BY PRIOR HISTORY_ID = PARENT_ID
-        ORDER SIBLINGS BY PROCESS_DATE
+        FROM hierarchy
+        ORDER BY level, PROCESS_DATE
     </select>
-
 </mapper>

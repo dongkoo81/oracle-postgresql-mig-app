@@ -30,7 +30,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     
     // Oracle
-    implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+    // implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+
+    // Aurora PostgreSQL
+    implementation 'org.postgresql:postgresql:42.7.1'
     
     // MyBatis
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'

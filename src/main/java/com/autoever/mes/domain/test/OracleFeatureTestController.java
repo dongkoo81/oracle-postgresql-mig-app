@@ -47,7 +47,7 @@ public class OracleFeatureTestController {
     @GetMapping("/function/check-available")
     public Map<String, Object> testStoredFunction(
             @RequestParam Long productId,
-            @RequestParam Integer requiredQty) {
+            @RequestParam Long requiredQty) {
         Integer available = orderMapper.checkProductAvailable(productId, requiredQty);
         return Map.of("available", available != null && available == 1);
     }
@@ -131,7 +131,7 @@ public class OracleFeatureTestController {
     @PostMapping("/merge/inventory")
     public Map<String, Object> testMergeStatement(
             @RequestParam Long productId,
-            @RequestParam Integer quantity) {
+            @RequestParam Long quantity) {
         orderMapper.mergeInventory(productId, quantity);
         Map<String, Object> result = new HashMap<>();
         result.put("productId", productId);

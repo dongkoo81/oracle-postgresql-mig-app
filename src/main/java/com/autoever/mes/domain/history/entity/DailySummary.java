@@ -21,7 +21,7 @@ public class DailySummary {
     private LocalDateTime summaryDate;
     
     @Column(name = "TOTAL_ORDERS")
-    private Integer totalOrders;
+    private Long totalOrders;
     
     @Column(name = "TOTAL_AMOUNT", precision = 15, scale = 2)
     private BigDecimal totalAmount;

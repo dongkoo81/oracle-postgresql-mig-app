@@ -26,7 +26,7 @@ public class OrderDetail {
     private Long productId;
     
     @Column(name = "QUANTITY", nullable = false)
-    private Integer quantity;
+    private Long quantity;
     
     @Column(name = "UNIT_PRICE", precision = 15, scale = 2)
     private BigDecimal unitPrice;

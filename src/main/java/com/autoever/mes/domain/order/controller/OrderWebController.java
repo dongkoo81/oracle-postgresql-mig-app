@@ -58,7 +58,7 @@ public class OrderWebController {
         private String orderNo;
         private String notes;
         private List<Long> productIds = new ArrayList<>();
-        private List<Integer> quantities = new ArrayList<>();
+        private List<Long> quantities = new ArrayList<>();
         
         public String getOrderNo() { return orderNo; }
         public void setOrderNo(String orderNo) { this.orderNo = orderNo; }
@@ -66,7 +66,7 @@ public class OrderWebController {
         public void setNotes(String notes) { this.notes = notes; }
         public List<Long> getProductIds() { return productIds; }
         public void setProductIds(List<Long> productIds) { this.productIds = productIds; }
-        public List<Integer> getQuantities() { return quantities; }
-        public void setQuantities(List<Integer> quantities) { this.quantities = quantities; }
+        public List<Long> getQuantities() { return quantities; }
+        public void setQuantities(List<Long> quantities) { this.quantities = quantities; }
     }
 }

@@ -23,12 +23,12 @@ public class Inventory {
     private Long productId;
     
     @Column(name = "QUANTITY", nullable = false)
-    private Integer quantity;
+    private Long quantity;
     
     @Column(name = "LAST_UPDATED")
     private LocalDateTime lastUpdated;
     
     @Version
-    @Column(name = "VERSION")
+    @Column(name = "VERSION", columnDefinition = "NUMERIC")
     private Long version;
 }

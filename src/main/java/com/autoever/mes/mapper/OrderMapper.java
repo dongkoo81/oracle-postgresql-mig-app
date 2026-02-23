@@ -11,11 +11,11 @@ public interface OrderMapper {
     
     void calculateOrderTotal(@Param("orderId") Long orderId, @Param("result") Map<String, Object> result);
     
-    Integer checkProductAvailable(@Param("productId") Long productId, @Param("requiredQty") Integer requiredQty);
+    Integer checkProductAvailable(@Param("productId") Long productId, @Param("requiredQty") Long requiredQty);
     
     String getProductStatus(@Param("productId") Long productId);
     
-    void mergeInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+    void mergeInventory(@Param("productId") Long productId, @Param("quantity") Long quantity);
     
     List<Map<String, Object>> findOrdersByDateRange(@Param("startDate") String startDate, @Param("endDate") String endDate);
 }

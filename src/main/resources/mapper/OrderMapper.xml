@@ -5,8 +5,8 @@
     <!-- Stored Procedure: CALCULATE_ORDER_TOTAL -->
     <select id="calculateOrderTotal" statementType="CALLABLE">
     CALL CALCULATE_ORDER_TOTAL(
-    #{orderId, mode=IN, jdbcType=NUMERIC},
-    #{result.totalAmount, mode=OUT, jdbcType=NUMERIC}
+    #{orderId, mode=IN, jdbcType=DOUBLE},
+    #{result.totalAmount, mode=OUT, jdbcType=DOUBLE}
     )
     </select>
 

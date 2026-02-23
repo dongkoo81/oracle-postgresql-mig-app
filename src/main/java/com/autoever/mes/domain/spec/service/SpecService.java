@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,13 +18,17 @@ public class SpecService {
     @Transactional
     public ProductSpec saveSpec(Long productId, String xmlContent, String version) {
         // 기존 사양이 있으면 업데이트, 없으면 새로 생성
-        ProductSpec spec = specRepository.findByProductId(productId)
-                .orElse(new ProductSpec());
+        Optional<ProductSpec> existing = specRepository.findByProductId(productId);
         
-        spec.setProductId(productId);
-        spec.setSpecXml(xmlContent);  // CLOB (XMLType)
-        spec.setVersion(version);
-        return specRepository.save(spec);
+        if (existing.isPresent()) {
+            ProductSpec spec = existing.get();
+            specRepository.updateSpecXml(spec.getSpecId(), xmlContent, version);
+            spec.setVersion(version);
+            return spec;
+        } else {
+            specRepository.insertSpecXml(productId, xmlContent, version);
+            return specRepository.findByProductId(productId).orElseThrow();
+        }
     }
     
     @Transactional(readOnly = true)

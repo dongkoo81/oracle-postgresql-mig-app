@@ -11,8 +11,8 @@ spring:
     # url: jdbc:oracle:thin:@//proxy.mes.db:5432/oracle19c  # HAProxy 사용 시
     url: jdbc:postgresql://apg17.cluster-cmjs2qxaojzn.ap-northeast-2.rds.amazonaws.com:5432/mesdb
     username: mesuser
-    password: mespass
-    driver-class-name: oracle.jdbc.OracleDriver
+    password: mesuser
+    driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20

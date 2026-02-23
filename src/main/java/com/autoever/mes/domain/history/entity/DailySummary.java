@@ -7,7 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "DAILY_SUMMARY")
@@ -18,7 +18,7 @@ public class DailySummary {
     
     @Id
     @Column(name = "SUMMARY_DATE")
-    private LocalDate summaryDate;
+    private LocalDateTime summaryDate;
     
     @Column(name = "TOTAL_ORDERS")
     private Integer totalOrders;

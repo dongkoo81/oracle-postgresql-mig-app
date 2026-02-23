@@ -5,11 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-public interface DailySummaryRepository extends JpaRepository<DailySummary, LocalDate> {
-    List<DailySummary> findBySummaryDateBetween(LocalDate startDate, LocalDate endDate);
+public interface DailySummaryRepository extends JpaRepository<DailySummary, LocalDateTime> {
+    List<DailySummary> findBySummaryDateBetween(LocalDateTime startDate, LocalDateTime endDate);
     
     @Modifying
     @Query(value = "REFRESH MATERIALIZED VIEW DAILY_SUMMARY", nativeQuery = true)

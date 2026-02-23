@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +42,7 @@ public class OrderService {
         // 1. 주문 생성
         ProductionOrder order = new ProductionOrder();
         order.setOrderNo(orderNo);
-        order.setOrderDate(LocalDate.now());
+        order.setOrderDate(LocalDateTime.now());
         order.setNotes(notes);
         order.setTotalAmount(BigDecimal.ZERO);
         

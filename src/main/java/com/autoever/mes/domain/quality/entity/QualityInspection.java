@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "QUALITY_INSPECTION")
@@ -20,8 +20,8 @@ public class QualityInspection {
     private Long inspectionId;
     
     @Id
-    @Column(name = "INSPECTION_DATE")
-    private LocalDate inspectionDate;
+    @Column(name = "INSPECTION_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime inspectionDate;
     
     @Id
     @Column(name = "RESULT", length = 20)
@@ -34,20 +34,19 @@ public class QualityInspection {
     private Long orderId;
     
     @Column(name = "DEFECT_COUNT")
-    private Integer defectCount = 0;
+    private Long defectCount = 0L;
     
     @Column(name = "INSPECTOR_NAME", length = 100)
     private String inspectorName;
     
-    @Lob
-    @Column(name = "NOTES")
+    @Column(name = "NOTES", columnDefinition = "TEXT")
     private String notes;
     
     @Getter @Setter
     @NoArgsConstructor
     public static class QualityInspectionId implements Serializable {
         private Long inspectionId;
-        private LocalDate inspectionDate;
+        private LocalDateTime inspectionDate;
         private String result;
     }
 }

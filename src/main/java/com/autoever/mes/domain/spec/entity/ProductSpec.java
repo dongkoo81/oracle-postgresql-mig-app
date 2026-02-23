@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PRODUCT_SPEC")
@@ -22,13 +22,12 @@ public class ProductSpec {
     @Column(name = "PRODUCT_ID", unique = true, nullable = false)
     private Long productId;
     
-    @Lob
-    @Column(name = "SPEC_XML", columnDefinition = "XMLTYPE")
+    @Column(name = "SPEC_XML", columnDefinition = "XML")
     private String specXml;
     
     @Column(name = "VERSION", length = 20)
     private String version;
     
-    @Column(name = "CREATED_DATE")
-    private LocalDate createdDate;
+    @Column(name = "CREATED_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime createdDate;
 }

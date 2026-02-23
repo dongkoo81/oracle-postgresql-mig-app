@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PRODUCT")
@@ -29,6 +29,6 @@ public class Product {
     @Column(name = "UNIT_PRICE", precision = 15, scale = 2)
     private BigDecimal unitPrice;
     
-    @Column(name = "CREATED_DATE")
-    private LocalDate createdDate;
+    @Column(name = "CREATED_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime createdDate;
 }

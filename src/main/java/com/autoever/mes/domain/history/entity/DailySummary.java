@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class DailySummary {
     
     @Id
-    @Column(name = "SUMMARY_DATE")
+    @Column(name = "SUMMARY_DATE", columnDefinition = "TIMESTAMP")
     private LocalDateTime summaryDate;
     
     @Column(name = "TOTAL_ORDERS")

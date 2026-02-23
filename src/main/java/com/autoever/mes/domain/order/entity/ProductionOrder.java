@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PRODUCTION_ORDER")
@@ -23,13 +23,12 @@ public class ProductionOrder {
     @Column(name = "ORDER_NO", unique = true, nullable = false, length = 50)
     private String orderNo;
     
-    @Column(name = "ORDER_DATE", nullable = false)
-    private LocalDate orderDate;
+    @Column(name = "ORDER_DATE", nullable = false, columnDefinition = "TIMESTAMP")
+    private LocalDateTime orderDate;
     
     @Column(name = "TOTAL_AMOUNT", precision = 15, scale = 2)
     private BigDecimal totalAmount;
     
-    @Lob
-    @Column(name = "NOTES")
+    @Column(name = "NOTES", columnDefinition = "TEXT")
     private String notes;
 }

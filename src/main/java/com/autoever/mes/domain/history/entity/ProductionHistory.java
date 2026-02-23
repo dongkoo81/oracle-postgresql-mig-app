@@ -28,6 +28,6 @@ public class ProductionHistory {
     @Column(name = "PROCESS_NAME", length = 100)
     private String processName;
     
-    @Column(name = "PROCESS_DATE")
+    @Column(name = "PROCESS_DATE", columnDefinition = "TIMESTAMP")
     private LocalDateTime processDate;
 }

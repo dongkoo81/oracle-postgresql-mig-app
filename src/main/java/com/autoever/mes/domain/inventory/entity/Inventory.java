@@ -25,7 +25,7 @@ public class Inventory {
     @Column(name = "QUANTITY", nullable = false)
     private Long quantity;
     
-    @Column(name = "LAST_UPDATED")
+    @Column(name = "LAST_UPDATED", columnDefinition = "TIMESTAMP")
     private LocalDateTime lastUpdated;
     
     @Version

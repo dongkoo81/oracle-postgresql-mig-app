@@ -3,7 +3,7 @@ package com.autoever.mes.common.dto;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class ProductDto {
@@ -11,5 +11,5 @@ public class ProductDto {
     private String productCode;
     private String productName;
     private BigDecimal unitPrice;
-    private LocalDate createdDate;
+    private LocalDateTime createdDate;
 }

@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PRODUCT_DOCUMENT")
@@ -25,17 +25,15 @@ public class ProductDocument {
     @Column(name = "DOC_NAME", length = 200)
     private String docName;
     
-    @Lob
-    @Column(name = "DOC_CONTENT")
+    @Column(name = "DOC_CONTENT", columnDefinition = "TEXT")
     private String docContent;
     
-    @Lob
-    @Column(name = "DOC_FILE")
+    @Column(name = "DOC_FILE", columnDefinition = "BYTEA")
     private byte[] docFile;
     
     @Column(name = "EXTERNAL_FILE", length = 500)
     private String externalFile;
     
-    @Column(name = "CREATED_DATE")
-    private LocalDate createdDate;
+    @Column(name = "CREATED_DATE", columnDefinition = "TIMESTAMP")
+    private LocalDateTime createdDate;
 }

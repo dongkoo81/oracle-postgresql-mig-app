@@ -129,6 +129,18 @@ SELECT * FROM hierarchy ORDER BY level, PROCESS_DATE
 @Query(value = "REFRESH MATERIALIZED VIEW DAILY_SUMMARY", nativeQuery = true)
 ```
 
+#### ✅ Entity 타입 수정
+
+**DailySummary.java**
+```java
+// 변경 전
+private LocalDate summaryDate;
+
+// 변경 후
+private LocalDateTime summaryDate;
+```
+**변경 이유:** Oracle DATE → PostgreSQL TIMESTAMP(0) 타입 변환에 따른 Java 타입 매칭
+
 #### ✅ Stored Procedure/Function
 
 DMS가 자동 변환했으며, 다음 항목들이 PostgreSQL로 변환됨:

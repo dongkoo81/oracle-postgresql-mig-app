@@ -191,11 +191,17 @@ tail -f app.log
 
 ### 애플리케이션 종료 및 재시작
 ```bash
-# 애플리케이션 종료
+# 1. 애플리케이션 종료
 pkill -f mes-0.0.1-SNAPSHOT.jar
 
-# 재빌드 및 재시작 (한 번에)
-pkill -f mes-0.0.1-SNAPSHOT.jar && ./gradlew clean build -x test && nohup java -jar build/libs/mes-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+# 2. 재빌드
+./gradlew clean build -x test
+
+# 3. 백그라운드 실행
+nohup java -jar build/libs/mes-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+
+# 4. 로그 실시간 확인
+tail -f app.log
 ```
 
 ### 애플리케이션 접속

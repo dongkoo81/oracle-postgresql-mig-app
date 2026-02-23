@@ -290,6 +290,7 @@ curl "http://localhost:8080/api/test/oracle/partition/PASS"
 - ✅ HistoryMapper.xml - CONNECT BY → WITH RECURSIVE
 - ✅ ProductRepositoryImpl.java - 5개 메서드 (SYSDATE, ROWNUM, MINUS, (+), NEXTVAL)
 - ✅ DailySummaryRepository.java - DBMS_MVIEW → REFRESH MATERIALIZED VIEW
+- ✅ DailySummary.java - LocalDate → LocalDateTime (TIMESTAMP 타입 대응)
 - ✅ Stored Procedures/Functions - PostgreSQL로 변환 (DMS + 수동)
 
 ## 🔍 주요 변환 내역

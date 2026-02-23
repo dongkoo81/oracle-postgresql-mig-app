@@ -1,14 +1,15 @@
-# Oracle MES Application
+# MES Application - Aurora PostgreSQL Migration
 
-Oracle 19c 기반 제조 실행 시스템(MES) 애플리케이션
+Oracle 19c 기반 제조 실행 시스템(MES)을 AWS Aurora PostgreSQL로 마이그레이션한 프로젝트
 
-## 프로젝트 개요
+## 📋 프로젝트 개요
 
-- **목적**: Oracle 특화 기능을 활용한 MES 시스템 구축 및 AWS DMS를 통한 PostgreSQL 마이그레이션 테스트
-- **데이터베이스**: Oracle 19c (Docker)
+- **목적**: Oracle MES 애플리케이션을 AWS DMS를 통해 Aurora PostgreSQL로 마이그레이션
+- **원본 DB**: Oracle 19c (Docker)
+- **타겟 DB**: AWS Aurora PostgreSQL 17
 - **애플리케이션**: Spring Boot 3.2, Java 17
 
-## 기술 스택
+## 🏗️ 기술 스택
 
 ### 백엔드
 - **프레임워크**: Spring Boot 3.2.0
@@ -20,306 +21,193 @@ Oracle 19c 기반 제조 실행 시스템(MES) 애플리케이션
 - **템플릿 엔진**: Thymeleaf 3.1
 
 ### 데이터베이스
-- **Oracle 19c**: 개발/테스트 환경
-- **PostgreSQL**: 마이그레이션 타겟
+- **개발**: Oracle 19c (Docker)
+- **운영**: AWS Aurora PostgreSQL 17
 
-### 마이그레이션 시 애플리케이션 변경 사항
+## 🔄 마이그레이션 프로세스
 
-| 항목 | Oracle | PostgreSQL | 변경 필요 |
-|------|--------|-----------|----------|
-| **JPA/Hibernate** | OracleDialect | PostgreSQLDialect | ✅ 설정 변경 |
-| **QueryDSL** | 동일 | 동일 | ❌ 변경 불필요 |
-| **MyBatis** | Oracle 문법 | PostgreSQL 문법 | ✅ XML 수정 |
-| **JDBC Driver** | ojdbc8 | postgresql | ✅ 의존성 변경 |
-| **Sequence 호출** | `@GeneratedValue` | `@GeneratedValue` | ❌ 변경 불필요 |
-| **페이징** | ROWNUM | LIMIT/OFFSET | ✅ Native Query 수정 |
+### 1단계: 데이터 마이그레이션 (AWS DMS)
+- Oracle 19c → Aurora PostgreSQL 17
+- 테이블, 인덱스, 시퀀스 자동 변환
+- Stored Procedure/Function 자동 변환 (일부 수동 수정 필요)
 
-## 데이터베이스 설정
+### 2단계: 애플리케이션 코드 수정
 
-### 사전 준비: SQL*Plus 설치 (EC2 환경)
+#### ✅ 설정 파일 변경
 
-Docker 외부(EC2)에서 Oracle에 접속하려면 SQL*Plus 설치 필요:
+**build.gradle**
+```gradle
+// 변경 전
+implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
 
-```bash
-# 1. yum-utils 설치
-sudo yum install -y yum-utils
-
-# 2. Oracle 저장소 추가
-sudo yum-config-manager --add-repo=https://yum.oracle.com/repo/OracleLinux/OL8/oracle/instantclient/x86_64
-
-# 3. Oracle GPG 키 가져오기
-sudo rpm --import https://yum.oracle.com/RPM-GPG-KEY-oracle-ol8
-
-# 4. Oracle Instant Client 설치
-sudo yum install -y oracle-instantclient19.30-basic oracle-instantclient19.30-sqlplus
-
-# 5. 환경 변수 설정
-echo 'export PATH=/usr/lib/oracle/19.30/client64/bin:$PATH' >> ~/.bashrc
-echo 'export LD_LIBRARY_PATH=/usr/lib/oracle/19.30/client64/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
-source ~/.bashrc
-
-# 6. 설치 확인
-sqlplus -v
+// 변경 후
+implementation 'org.postgresql:postgresql:42.7.1'
 ```
 
-### 연결 정보
-- **호스트**: localhost (Docker 환경)
-- **포트**: 1521
-- **서비스명**: ORCLPDB1 (Docker 환경)
-- **사용자**: mesuser / mespass
+**application.yml**
+```yaml
+# 변경 전 (Oracle)
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      connection-test-query: SELECT 1 FROM DUAL
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
 
-### 데이터베이스 초기화
-
-1. **사용자 생성** (system 계정으로 실행)
-```bash
-sqlplus system/system@localhost:1521/ORCLPDB1 @sql/01_create_user.sql
+# 변경 후 (PostgreSQL)
+spring:
+  datasource:
+    url: jdbc:postgresql://apg17.cluster-xxx.ap-northeast-2.rds.amazonaws.com:5432/mesdb
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-test-query: SELECT 1
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 ```
 
-2. **테이블 생성** (mesuser 계정으로 실행)
-```bash
-sqlplus mesuser/mespass@localhost:1521/ORCLPDB1 @sql/schema/02_create_tables.sql
+#### ✅ MyBatis XML 수정
+
+**OrderMapper.xml** (4개 수정)
+```xml
+<!-- 1. Stored Procedure 호출 -->
+변경 전: {CALL CALCULATE_ORDER_TOTAL(...)}
+변경 후: CALL CALCULATE_ORDER_TOTAL(...)
+
+<!-- 2. Stored Function 호출 -->
+변경 전: SELECT CHECK_PRODUCT_AVAILABLE(...) FROM DUAL
+변경 후: SELECT CHECK_PRODUCT_AVAILABLE(...)
+
+<!-- 3. MERGE_INVENTORY -->
+변경 전: {CALL MERGE_INVENTORY(...)}
+변경 후: CALL MERGE_INVENTORY(...)
 ```
 
-3. **프로시저, 트리거, Materialized View 생성**
-```bash
-sqlplus mesuser/mespass@localhost:1521/ORCLPDB1 @sql/procedures/03_create_procedures.sql
+**HistoryMapper.xml** (CONNECT BY → WITH RECURSIVE)
+```xml
+<!-- 변경 전: Oracle CONNECT BY -->
+SELECT * FROM PRODUCTION_HISTORY
+WHERE ORDER_ID = #{orderId}
+START WITH PARENT_ID IS NULL
+CONNECT BY PRIOR HISTORY_ID = PARENT_ID
+
+<!-- 변경 후: PostgreSQL WITH RECURSIVE -->
+WITH RECURSIVE hierarchy AS (
+    SELECT *, 1 as level
+    FROM PRODUCTION_HISTORY
+    WHERE ORDER_ID = #{orderId} AND PARENT_ID IS NULL
+    UNION ALL
+    SELECT ph.*, h.level + 1
+    FROM PRODUCTION_HISTORY ph
+    INNER JOIN hierarchy h ON ph.PARENT_ID = h.HISTORY_ID
+    WHERE ph.ORDER_ID = #{orderId}
+)
+SELECT * FROM hierarchy ORDER BY level, PROCESS_DATE
 ```
 
-4. **샘플 데이터 삽입**
-```bash
-sqlplus mesuser/mespass@localhost:1521/ORCLPDB1 @sql/data/04_insert_sample_data.sql
+#### ✅ Repository 구현체 수정
+
+**ProductRepositoryImpl.java** (5개 메서드)
+
+| 메서드 | Oracle | PostgreSQL |
+|--------|--------|-----------|
+| findProductsCreatedToday | `TRUNC(SYSDATE)` | `CURRENT_DATE` |
+| findTopProductsByRownum | `ROWNUM <= :limit` | `LIMIT :limit` |
+| getSequenceNextval | `SEQ.NEXTVAL FROM DUAL` | `NEXTVAL('seq')` |
+| findProductsWithoutInventory | `MINUS` | `EXCEPT` |
+| findProductsWithInventoryOldStyle | `(+)` Outer Join | `LEFT JOIN` |
+
+#### ✅ Native Query 수정
+
+**DailySummaryRepository.java**
+```java
+// 변경 전
+@Query(value = "BEGIN DBMS_MVIEW.REFRESH('DAILY_SUMMARY', 'C'); END;", nativeQuery = true)
+
+// 변경 후
+@Query(value = "REFRESH MATERIALIZED VIEW DAILY_SUMMARY", nativeQuery = true)
 ```
 
-## 프로젝트 구조
+#### ✅ Stored Procedure/Function
+
+DMS가 자동 변환했으며, 다음 항목들이 PostgreSQL로 변환됨:
+- `CALCULATE_ORDER_TOTAL` - NVL → COALESCE
+- `CHECK_PRODUCT_AVAILABLE` - NVL → COALESCE
+- `GET_PRODUCT_STATUS` - DECODE → CASE WHEN
+- `MERGE_INVENTORY` - MERGE → INSERT ... ON CONFLICT (수동 수정)
+
+## 📁 프로젝트 구조
 
 ```
-autoever/
-├── src/
-│   ├── main/
-│   │   ├── java/com/autoever/mes/
-│   │   │   ├── config/              # 설정 클래스
-│   │   │   ├── domain/              # 도메인 모델
-│   │   │   │   ├── product/
-│   │   │   │   ├── order/
-│   │   │   │   ├── inventory/
-│   │   │   │   ├── history/
-│   │   │   │   └── document/
-│   │   │   └── common/              # 공통 컴포넌트
-│   │   └── resources/
-│   │       ├── mapper/              # MyBatis XML
-│   │       ├── templates/           # Thymeleaf 템플릿
-│   │       └── application.yml
-│   └── test/
-├── sql/                             # SQL 스크립트
-│   ├── schema/
-│   ├── data/
-│   └── procedures/
-└── build.gradle
+src/main/java/com/autoever/mes/
+├── MesApplication.java
+├── config/                          # JPA, QueryDSL 설정
+├── common/                          # 공통 컴포넌트
+├── domain/
+│   ├── product/                     # 제품 관리
+│   ├── order/                       # 작업지시 관리
+│   ├── quality/                     # 품질검사
+│   ├── inventory/                   # 재고 관리
+│   ├── history/                     # 생산 이력
+│   ├── document/                    # 문서 (CLOB → TEXT)
+│   ├── spec/                        # 제품 사양 (XMLType → XML)
+│   └── test/                        # 기능 테스트 API
+└── mapper/                          # MyBatis Mapper
+
+src/main/resources/
+├── application.yml
+├── mapper/                          # MyBatis XML
+├── templates/                       # Thymeleaf
+└── static/
 ```
 
-## 빌드 및 실행
+## 🚀 빌드 및 실행
 
 ### 사전 요구사항
 - JDK 17 이상
 - Gradle 8.5 이상
-- Oracle 19c 데이터베이스 (localhost:1521/ORCLPDB1)
-
-### Java 설치 (Amazon Linux)
-
-```bash
-# Amazon Corretto 17 설치
-sudo yum install -y java-17-amazon-corretto-devel
-
-# 설치 확인
-java -version
-```
+- Aurora PostgreSQL 접속 정보
 
 ### 빌드
 ```bash
-# 프로젝트 디렉토리로 이동
-cd /home/ec2-user/project/oracle-postgresql-migration
-
-# 빌드 (테스트 제외)
 ./gradlew clean build -x test
-
-# 빌드 (테스트 포함)
-./gradlew clean build
 ```
 
 ### 실행
-
-#### 1. Gradle로 직접 실행 (개발 모드)
 ```bash
+# 개발 모드
 ./gradlew bootRun
-```
 
-#### 2. JAR 파일로 실행 (프로덕션)
-```bash
-# 빌드
-./gradlew clean build -x test
-
-# 실행
+# JAR 실행
 java -jar build/libs/mes-0.0.1-SNAPSHOT.jar
-```
 
-#### 3. 백그라운드 실행
-
-```bash
-# JAR 파일로 백그라운드 실행
+# 백그라운드 실행
 nohup java -jar build/libs/mes-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
-
-# 프로세스 확인
-ps aux | grep java
-
-# 로그 확인
-tail -f app.log
-
-# 종료
-pkill -f "mes-0.0.1-SNAPSHOT.jar"
 ```
 
 ### 애플리케이션 접속
 - **홈페이지**: http://localhost:8080
 - **제품 관리**: http://localhost:8080/products
 - **작업지시 관리**: http://localhost:8080/orders
-- **Oracle 특화 기능**: http://localhost:8080/oracle-features
+- **품질검사**: http://localhost:8080/quality
+- **기능 테스트**: http://localhost:8080/oracle-features
 
-### 포트 변경
-`src/main/resources/application.yml` 파일에서 포트 변경 가능:
-```yaml
-server:
-  port: 8080  # 원하는 포트로 변경
-```
+## 🧪 API 테스트
 
-## Oracle 특화 기능 (총 20개)
-
-### 구현된 기능 목록
-
-1. **Sequence** - 모든 PK 자동 생성 + NEXTVAL 직접 호출
-2. **Trigger** - 주문 생성 시 이력 자동 기록
-3. **CLOB** - 대용량 텍스트 (NOTES, DOC_CONTENT)
-4. **BLOB** - 바이너리 파일 (DOC_FILE)
-5. **XMLType** - XML 문서 (SPEC_XML)
-6. **CONNECT BY** - 계층 쿼리 (PRODUCTION_HISTORY)
-7. **Stored Procedure** - CALCULATE_ORDER_TOTAL, MERGE_INVENTORY
-8. **Stored Function** - CHECK_PRODUCT_AVAILABLE, GET_PRODUCT_STATUS, GET_TOP_PRODUCTS
-9. **Materialized View** - DAILY_SUMMARY (REFRESH ON DEMAND)
-10. **Partition Table** - QUALITY_INSPECTION (Range + List Composite Partition)
-11. **NVL** - NULL 값 처리 (프로시저/함수 내)
-12. **DECODE** - 조건부 값 반환 (GET_PRODUCT_STATUS)
-13. **ROWNUM** - 페이징 처리 (직접 사용 + Hibernate 자동)
-14. **MERGE** - UPSERT 작업 (MERGE_INVENTORY)
-15. **DUAL** - 함수 호출용 더미 테이블
-16. **SYSDATE** - 현재 날짜/시간 (Native Query)
-17. **TO_DATE** - 날짜 변환 및 검색
-18. **MINUS** - 집합 연산 (차집합)
-19. **(+) Outer Join** - 구식 Outer Join 문법
-20. **QueryDSL** - 동적 쿼리 생성
-
-### 화면별 Oracle 특화 기능
-
-| 화면 | URL | 포함된 Oracle 기능 (개수) |
-|------|-----|-------------------|
-| 제품 관리 | http://localhost:8080/products | Sequence (2개) |
-| 작업지시 관리 | http://localhost:8080/orders | Stored Procedure, Trigger, CLOB, NVL (4개) |
-| 품질검사 이력 | http://localhost:8080/quality | Partition Table, ROWNUM (2개) |
-| Oracle 특화 기능 | http://localhost:8080/oracle-features | Stored Function, CONNECT BY, XMLType, Materialized View, MERGE, DECODE, DUAL (8개) |
-
-### Oracle 특화 기능 테스트 방법
-
-#### 자동 테스트 스크립트 (권장)
-
+### 기본 REST API
 ```bash
-# 1. 테스트 스크립트 생성
-cat << 'EOF' > test_oracle_features.sh
-#!/bin/bash
-echo "=========================================="
-echo "Oracle 특화 기능 전체 테스트 (20개)"
-echo "=========================================="
+# 제품 목록 조회
+curl http://localhost:8080/api/products
 
-# 애플리케이션 상태 확인
-if ! curl -s http://localhost:8080/api/products > /dev/null 2>&1; then
-    echo "❌ 애플리케이션이 실행되지 않았습니다"
-    exit 1
-fi
-echo "✅ 애플리케이션 정상 실행 중"
+# 주문 목록 조회
+curl http://localhost:8080/api/orders
 
-# 각 기능 테스트
-echo -e "\n[1] QueryDSL 동적 검색"
-curl -s "http://localhost:8080/api/test/oracle/querydsl/search?name=Engine" | jq -c 'if length > 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[2] Stored Function + NVL"
-curl -s "http://localhost:8080/api/test/oracle/function/check-available?productId=1&requiredQty=10" | jq -c 'if .available != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[3] Stored Procedure + NVL"
-curl -s -X POST "http://localhost:8080/api/test/oracle/procedure/calculate-total/1" | jq -c 'if .totalAmount != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[4] CONNECT BY"
-curl -s "http://localhost:8080/api/test/oracle/hierarchy/1" | jq -c 'if length > 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[5] CLOB"
-curl -s -X POST "http://localhost:8080/api/test/oracle/clob/save?productId=1&content=Test" | jq -c 'if .docId != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[6] BLOB"
-curl -s "http://localhost:8080/api/test/oracle/documents/product/1" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[7] XMLType"
-XML='<spec><version>1.0</version><category>Test</category></spec>'
-curl -s -X POST "http://localhost:8080/api/test/oracle/xml/save?productId=1&xmlContent=$(echo $XML | jq -sRr @uri)" | jq -c 'if .specId != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[8] Materialized View"
-curl -s "http://localhost:8080/api/test/oracle/materialized-view" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[9] DECODE + DUAL"
-curl -s "http://localhost:8080/api/test/oracle/decode/product-status/1" | jq -c 'if .status != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[10] MERGE"
-curl -s -X POST "http://localhost:8080/api/test/oracle/merge/inventory?productId=1&quantity=10" | jq -c 'if .message != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[11] SYSDATE"
-curl -s "http://localhost:8080/api/test/oracle/sysdate/today-products" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[12] TO_DATE"
-curl -s "http://localhost:8080/api/test/oracle/to-date/search?startDate=2024-01-01&endDate=2026-12-31" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[13] ROWNUM"
-curl -s "http://localhost:8080/api/test/oracle/rownum/top-products?limit=3" | jq -c 'if length > 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[14] Sequence NEXTVAL"
-curl -s "http://localhost:8080/api/test/oracle/sequence/nextval?sequenceName=PRODUCT_SEQ" | jq -c 'if .nextVal != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[15] MINUS"
-curl -s "http://localhost:8080/api/test/oracle/minus/products-without-inventory" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[16] (+) Outer Join"
-curl -s "http://localhost:8080/api/test/oracle/outer-join/products-inventory" | jq -c 'if length > 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[17] Partition Table"
-curl -s "http://localhost:8080/api/test/oracle/partition/PASS" | jq -c 'if length >= 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[18] Trigger"
-ORDER_NO="TEST-$(date +%s)"
-curl -s -X POST "http://localhost:8080/api/orders" -H "Content-Type: application/json" -d "{\"orderNo\":\"$ORDER_NO\",\"orderDate\":\"2026-02-21\",\"notes\":\"Test\"}" | jq -c 'if .orderId != null then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[19] Sequence (자동 PK)"
-curl -s "http://localhost:8080/api/products" | jq -c 'if length > 0 then "✅ 성공" else "❌ 실패" end'
-
-echo -e "\n[20] DUAL (자동 사용)"
-echo "✅ 성공 (DECODE 함수 호출 시 자동 사용)"
-
-echo -e "\n=========================================="
-echo "테스트 완료"
-echo "=========================================="
-EOF
-
-chmod +x test_oracle_features.sh
-
-# 2. 테스트 실행
-./test_oracle_features.sh
+# 품질검사 조회
+curl http://localhost:8080/api/quality
 ```
 
-#### 수동 테스트 (개별 API 호출)
-
+### PostgreSQL 기능 테스트 API
 ```bash
 # 1. QueryDSL 동적 검색
 curl "http://localhost:8080/api/test/oracle/querydsl/search?name=Engine"
@@ -330,393 +218,140 @@ curl "http://localhost:8080/api/test/oracle/function/check-available?productId=1
 # 3. Stored Procedure (금액 계산)
 curl -X POST "http://localhost:8080/api/test/oracle/procedure/calculate-total/1"
 
-# 4. CONNECT BY (계층 쿼리)
+# 4. WITH RECURSIVE (계층 쿼리)
 curl "http://localhost:8080/api/test/oracle/hierarchy/1"
 
-# 5. CLOB (대용량 텍스트)
+# 5. TEXT 타입 (CLOB 대체)
 curl -X POST "http://localhost:8080/api/test/oracle/clob/save?productId=1&content=TestDocument"
 
-# 6. XMLType (XML 저장)
-curl -X POST "http://localhost:8080/api/test/oracle/xml/save?productId=1&xmlContent=%3Cspec%3E%3Cversion%3E1.0%3C%2Fversion%3E%3Ccategory%3ETest%3C%2Fcategory%3E%3C%2Fspec%3E"
+# 6. XML 타입
+curl -X POST "http://localhost:8080/api/test/oracle/xml/save?productId=1&xmlContent=%3Cspec%3E%3C%2Fspec%3E"
 
-# 7. Materialized View (일일 요약)
+# 7. Materialized View
 curl "http://localhost:8080/api/test/oracle/materialized-view"
 
-# 8. DECODE 함수
+# 8. Materialized View Refresh
+curl -X POST "http://localhost:8080/api/test/oracle/materialized-view/refresh"
+
+# 9. CASE WHEN (DECODE 대체)
 curl "http://localhost:8080/api/test/oracle/decode/product-status/1"
 
-# 9. MERGE 문
+# 10. ON CONFLICT (MERGE 대체)
 curl -X POST "http://localhost:8080/api/test/oracle/merge/inventory?productId=1&quantity=10"
 
-# 10. SYSDATE
+# 11. CURRENT_DATE (SYSDATE 대체)
 curl "http://localhost:8080/api/test/oracle/sysdate/today-products"
 
-# 11. TO_DATE
+# 12. TO_DATE
 curl "http://localhost:8080/api/test/oracle/to-date/search?startDate=2024-01-01&endDate=2026-12-31"
 
-# 12. ROWNUM
+# 13. LIMIT (ROWNUM 대체)
 curl "http://localhost:8080/api/test/oracle/rownum/top-products?limit=5"
 
-# 13. Sequence NEXTVAL
-curl "http://localhost:8080/api/test/oracle/sequence/nextval?sequenceName=PRODUCT_SEQ"
+# 14. NEXTVAL() (Sequence)
+curl "http://localhost:8080/api/test/oracle/sequence/nextval?sequenceName=product_seq"
 
-# 14. MINUS
+# 15. EXCEPT (MINUS 대체)
 curl "http://localhost:8080/api/test/oracle/minus/products-without-inventory"
 
-# 15. (+) Outer Join
+# 16. LEFT JOIN ((+) 대체)
 curl "http://localhost:8080/api/test/oracle/outer-join/products-inventory"
 
-# 16. Partition Table
+# 17. Partition Table
 curl "http://localhost:8080/api/test/oracle/partition/PASS"
-
-# 17. Trigger (주문 생성 시 자동 실행)
-curl -X POST "http://localhost:8080/api/orders" \
-  -H "Content-Type: application/json" \
-  -d '{"orderNo":"TEST-001","orderDate":"2026-02-21","notes":"Trigger Test"}'
-
-# 18. Sequence (자동 증가 PK) - 모든 INSERT에서 자동 사용
-curl "http://localhost:8080/api/products"
-
-# 19. BLOB - CLOB API와 동일 테이블 (PRODUCT_DOCUMENT)
-curl "http://localhost:8080/api/test/oracle/documents/product/1"
-
-# 20. DUAL - Stored Function 호출 시 자동 사용
-# DECODE 함수 테스트 시 "SELECT GET_PRODUCT_STATUS(1) FROM DUAL" 실행됨
-curl "http://localhost:8080/api/test/oracle/decode/product-status/1"
-
-# 추가: NVL - Stored Procedure/Function 내부에서 자동 사용
-# - Stored Function (테스트 #2): CHECK_PRODUCT_AVAILABLE 함수 내부에서 NVL 사용
-# - Stored Procedure (테스트 #3): CALCULATE_ORDER_TOTAL 프로시저 내부에서 NVL 사용
 ```
 
----
-
-## PostgreSQL 마이그레이션 시 예상 문제점
-
-### 1. Oracle 전용 함수
-
-| Oracle | PostgreSQL | 변경 필요도 |
-|--------|-----------|-----------|
-| `NVL(col, 0)` | `COALESCE(col, 0)` | 🔴 높음 |
-| `DECODE(col, val1, res1, val2, res2)` | `CASE WHEN col = val1 THEN res1 WHEN col = val2 THEN res2 END` | 🔴 높음 |
-| `SYSDATE` | `CURRENT_TIMESTAMP` | 🟡 중간 |
-| `TO_DATE(str, fmt)` | `TO_TIMESTAMP(str, fmt)` | 🟡 중간 |
-| `ROWNUM` | `ROW_NUMBER() OVER()` 또는 `LIMIT/OFFSET` | 🔴 높음 |
-
-### 2. 데이터 타입
-
-| Oracle | PostgreSQL | 변경 필요도 |
-|--------|-----------|-----------|
-| `NUMBER(19)` | `BIGINT` 또는 `NUMERIC(19)` | 🟡 중간 |
-| `VARCHAR2(n)` | `VARCHAR(n)` | 🟢 낮음 |
-| `CLOB` | `TEXT` | 🟡 중간 |
-| `BLOB` | `BYTEA` | 🟡 중간 |
-| `DATE` (시간 포함) | `TIMESTAMP` | 🟡 중간 |
-| `XMLType` | `XML` | 🟢 낮음 |
-
-### 3. Sequence 문법
-
-**Oracle:**
-```sql
-SELECT PRODUCT_SEQ.NEXTVAL FROM DUAL;
-```
-
-**PostgreSQL:**
-```sql
-SELECT NEXTVAL('product_seq');
--- 또는
-SELECT NEXTVAL('product_seq'::regclass);
-```
-
-### 4. MERGE 문
-
-**Oracle:**
-```sql
-MERGE INTO inventory i
-USING (SELECT 1 AS product_id, 100 AS quantity FROM DUAL) src
-ON (i.product_id = src.product_id)
-WHEN MATCHED THEN UPDATE SET i.quantity = src.quantity
-WHEN NOT MATCHED THEN INSERT VALUES (src.product_id, src.quantity);
-```
-
-**PostgreSQL:**
-```sql
-INSERT INTO inventory (product_id, quantity)
-VALUES (1, 100)
-ON CONFLICT (product_id)
-DO UPDATE SET quantity = EXCLUDED.quantity;
-```
-
-### 5. 계층 쿼리 (CONNECT BY)
-
-**Oracle:**
-```sql
-SELECT * FROM production_history
-START WITH parent_id IS NULL
-CONNECT BY PRIOR history_id = parent_id;
-```
-
-**PostgreSQL:**
-```sql
-WITH RECURSIVE hierarchy AS (
-    SELECT * FROM production_history WHERE parent_id IS NULL
-    UNION ALL
-    SELECT ph.* FROM production_history ph
-    INNER JOIN hierarchy h ON ph.parent_id = h.history_id
-)
-SELECT * FROM hierarchy;
-```
-
-### 6. DUAL 테이블
-
-**Oracle:**
-```sql
-SELECT GET_PRODUCT_STATUS(1) FROM DUAL;
-```
-
-**PostgreSQL:**
-```sql
-SELECT GET_PRODUCT_STATUS(1);  -- FROM 절 불필요
-```
-
-### 7. Materialized View
-
-**Oracle:**
-```sql
-CREATE MATERIALIZED VIEW daily_summary
-BUILD IMMEDIATE
-REFRESH COMPLETE ON DEMAND
-AS SELECT ...;
-
--- Refresh
-EXEC DBMS_MVIEW.REFRESH('DAILY_SUMMARY', 'C');
-```
-
-**PostgreSQL:**
-```sql
-CREATE MATERIALIZED VIEW daily_summary
-AS SELECT ...;
-
--- Refresh
-REFRESH MATERIALIZED VIEW daily_summary;
-```
-
-### 8. Partition Table
-
-**Oracle:**
-```sql
-PARTITION BY RANGE (inspection_date)
-SUBPARTITION BY LIST (result)
-```
-
-**PostgreSQL:**
-```sql
-PARTITION BY RANGE (inspection_date);
--- Subpartition은 별도 테이블로 구현 필요
-```
-
-### 9. Stored Procedure/Function
-
-**Oracle:**
-```sql
-CREATE OR REPLACE PROCEDURE proc_name(p_in IN NUMBER, p_out OUT NUMBER) AS
-BEGIN
-    ...
-END;
-/
-```
-
-**PostgreSQL:**
-```sql
-CREATE OR REPLACE FUNCTION proc_name(p_in INTEGER, OUT p_out INTEGER)
-RETURNS INTEGER AS $$
-BEGIN
-    ...
-END;
-$$ LANGUAGE plpgsql;
-```
-
-### 10. 마이그레이션 난이도 요약
-
-| 기능 | 난이도 | 비고 |
-|------|--------|------|
-| Sequence | 🟢 낮음 | 문법만 변경 |
-| CLOB/BLOB | 🟡 중간 | TEXT/BYTEA로 변경 |
-| Stored Procedure/Function | 🔴 높음 | 문법 및 로직 재작성 |
-| Trigger | 🟡 중간 | 문법 변경 |
-| CONNECT BY | 🔴 높음 | WITH RECURSIVE로 재작성 |
-| Materialized View | 🟢 낮음 | 문법 약간 변경 |
-| Partition Table | 🟡 중간 | Subpartition 재설계 필요 |
-| NVL/DECODE | 🔴 높음 | 모든 쿼리 수정 필요 |
-| ROWNUM | 🔴 높음 | 페이징 로직 재작성 |
-| MERGE | 🟡 중간 | ON CONFLICT로 변경 |
-
-### 11. 애플리케이션 레이어 마이그레이션 체크리스트
-
-#### ✅ 변경 불필요 (DB 독립적)
-- **Spring Boot**: 프레임워크 코드 변경 없음
-- **JPA Entity**: `@Entity`, `@Table`, `@Column` 등 어노테이션 유지
-- **QueryDSL**: 동적 쿼리 코드 변경 없음 (Dialect만 변경)
-- **Service/Controller**: 비즈니스 로직 변경 없음
-- **Thymeleaf**: 템플릿 코드 변경 없음
-
-#### ⚠️ 설정 변경 필요
-- **application.yml**
-  ```yaml
-  # Before (Oracle)
-  spring:
-    datasource:
-      url: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
-      driver-class-name: oracle.jdbc.OracleDriver
-    jpa:
-      database-platform: org.hibernate.dialect.Oracle12cDialect
-  
-  # After (PostgreSQL)
-  spring:
-    datasource:
-      url: jdbc:postgresql://localhost:5432/mesdb
-      driver-class-name: org.postgresql.Driver
-    jpa:
-      database-platform: org.hibernate.dialect.PostgreSQLDialect
-  ```
-
-- **build.gradle**
-  ```gradle
-  # Before (Oracle)
-  implementation 'com.oracle.database.jdbc:ojdbc8:21.9.0.0'
-  
-  # After (PostgreSQL)
-  implementation 'org.postgresql:postgresql:42.7.1'
-  ```
-
-#### 🔴 코드 수정 필요
-- **MyBatis XML**: Oracle 전용 함수 사용 시 (NVL, DECODE, ROWNUM 등)
-- **Native Query**: `@Query` 어노테이션에서 Oracle SQL 사용 시
-- **Stored Procedure 호출**: MyBatis Mapper에서 프로시저 호출 부분
-
-#### 📋 테스트 항목
-1. **단위 테스트**: Repository, Service 레이어 테스트
-2. **통합 테스트**: 전체 트랜잭션 플로우 테스트
-3. **성능 테스트**: 페이징, 대용량 데이터 조회
-4. **기능 테스트**: 각 화면별 CRUD 동작 확인
-
----
-
-## API 엔드포인트
-
-### 기본 REST API
-- `GET /api/products` - 제품 목록 조회
-- `POST /api/products` - 제품 생성
-- `GET /api/orders` - 주문 목록 조회
-- `POST /api/orders` - 주문 생성
-- `GET /api/quality` - 품질검사 목록 조회
-- `GET /api/quality/result/{result}` - 결과별 품질검사 조회 (PASS/FAIL/PENDING)
-- `POST /api/quality` - 품질검사 생성
-
-### Oracle 특화 기능 테스트 API (16개)
-
-#### 1. QueryDSL 동적 쿼리
-- `GET /api/test/oracle/querydsl/search?name=Engine&minPrice=100000&maxPrice=200000`
-
-#### 2. Stored Function (재고 확인, NVL 사용)
-- `GET /api/test/oracle/function/check-available?productId=1&requiredQty=10`
-
-#### 3. Stored Procedure (금액 계산, NVL 사용)
-- `POST /api/test/oracle/procedure/calculate-total/{orderId}`
-
-#### 4. CONNECT BY (계층 쿼리)
-- `GET /api/test/oracle/hierarchy/{orderId}`
-
-#### 5. CLOB (대용량 텍스트)
-- `POST /api/test/oracle/clob/save?productId=1&content=...`
-- `GET /api/test/oracle/documents/product/{productId}`
-
-#### 6. XMLType (XML 저장 및 검증)
-- `POST /api/test/oracle/xml/save?productId=1&xmlContent=...`
-- `GET /api/test/oracle/specs/product/{productId}`
-
-#### 7. Materialized View (일일 요약)
-- `GET /api/test/oracle/materialized-view`
-- `POST /api/test/oracle/materialized-view/refresh`
-
-#### 8. DECODE 함수 (조건부 값 반환)
-- `GET /api/test/oracle/decode/product-status/{productId}`
-
-#### 9. MERGE 문 (UPSERT)
-- `POST /api/test/oracle/merge/inventory?productId=1&quantity=100`
-
-#### 10. SYSDATE (현재 날짜)
-- `GET /api/test/oracle/sysdate/today-products`
-
-#### 11. TO_DATE (날짜 범위 검색)
-- `GET /api/test/oracle/to-date/search?startDate=2024-01-01&endDate=2024-12-31`
-
-#### 12. ROWNUM (직접 페이징)
-- `GET /api/test/oracle/rownum/top-products?limit=5`
-
-#### 13. Sequence NEXTVAL (직접 호출)
-- `GET /api/test/oracle/sequence/nextval?sequenceName=PRODUCT_SEQ`
-
-#### 14. MINUS (집합 연산)
-- `GET /api/test/oracle/minus/products-without-inventory`
-
-#### 15. (+) Outer Join (구식 문법)
-- `GET /api/test/oracle/outer-join/products-inventory`
-
-#### 16. Partition Table (파티션 조회)
-- `GET /api/test/oracle/partition/{result}` (result: PASS, FAIL, PENDING)
-
-**참고:** 나머지 4개 기능은 다른 API에 포함되어 있습니다:
-- **Trigger**: 주문 생성 시 자동 실행 (`POST /api/orders`)
-- **BLOB**: PRODUCT_DOCUMENT 테이블에 구현 (CLOB API와 동일 테이블)
-- **DUAL**: Stored Function 호출 시 자동 사용 (예: `GET_PRODUCT_STATUS`)
-- **NVL**: Stored Procedure/Function 내부에서 사용 (API #2, #3)
-
-### 웹 UI
-- `http://localhost:8080` - 홈페이지
-- `http://localhost:8080/products` - 제품 관리 (Sequence, ROWNUM)
-- `http://localhost:8080/orders` - 작업지시 관리 (Stored Procedure, Trigger, CLOB, NVL)
-- `http://localhost:8080/quality` - 품질검사 이력 (Partition Table, ROWNUM)
-- `http://localhost:8080/oracle-features` - Oracle 특화 기능 체험 (Stored Function, CONNECT BY, XMLType, Materialized View, MERGE, DECODE, DUAL)
-
----
-
-## 구현 완료 현황
-
-### ✅ 전체 기능 구현 완료
-총 9개 테이블, 20개 Oracle 특화 기능 모두 구현 및 테스트 완료
-
-### 테이블 목록
-1. ✅ PRODUCT - Sequence, JPA
-2. ✅ PRODUCTION_ORDER - Stored Procedure, Trigger, CLOB
-3. ✅ ORDER_DETAIL - Foreign Key
-4. ✅ INVENTORY - Optimistic Lock (VERSION)
-5. ✅ PRODUCTION_HISTORY - CONNECT BY (계층 쿼리)
-6. ✅ PRODUCT_DOCUMENT - CLOB (대용량 텍스트)
-7. ✅ PRODUCT_SPEC - XMLType
-8. ✅ QUALITY_INSPECTION - Partition Table (Range + List Composite)
-9. ✅ DAILY_SUMMARY - Materialized View
-
-### Oracle 특화 기능 (20개)
-1. ✅ Sequence - 자동 증가 PK + NEXTVAL 직접 호출
-2. ✅ Stored Procedure - CALCULATE_ORDER_TOTAL, MERGE_INVENTORY
-3. ✅ Stored Function - CHECK_PRODUCT_AVAILABLE, GET_PRODUCT_STATUS, GET_TOP_PRODUCTS
-4. ✅ Trigger - 주문 생성 시 이력 자동 기록
-5. ✅ CONNECT BY - 계층 구조 쿼리
-6. ✅ CLOB - 4GB 대용량 텍스트
-7. ✅ BLOB - 바이너리 파일
-8. ✅ XMLType - XML 데이터 저장 및 검증
-9. ✅ Materialized View - REFRESH ON DEMAND
-10. ✅ Partition Table - Range + List Composite Partition
-11. ✅ NVL - NULL 값 처리 (프로시저/함수 내)
-12. ✅ DECODE - 조건부 값 반환 (GET_PRODUCT_STATUS)
-13. ✅ ROWNUM - 페이징 처리 (직접 사용 + Hibernate 자동)
-14. ✅ MERGE - UPSERT 작업 (MERGE_INVENTORY)
-15. ✅ DUAL - 함수 호출용 더미 테이블
-16. ✅ SYSDATE - 현재 날짜/시간 (Native Query)
-17. ✅ TO_DATE - 날짜 변환 및 검색
-18. ✅ MINUS - 집합 연산 (차집합)
-19. ✅ (+) Outer Join - 구식 Outer Join 문법
-20. ✅ QueryDSL - 동적 쿼리 생성
-
-
+## 📊 마이그레이션 결과
+
+### 변경 불필요 항목 (DB 독립적)
+- ✅ JPA Entity 클래스
+- ✅ QueryDSL 동적 쿼리
+- ✅ Service 레이어 비즈니스 로직
+- ✅ Controller (REST API, 웹)
+- ✅ Thymeleaf 템플릿
+- ✅ DTO 클래스
+
+### 변경 완료 항목
+- ✅ build.gradle - JDBC 드라이버
+- ✅ application.yml - 연결 정보, Dialect
+- ✅ OrderMapper.xml - FROM DUAL 제거, {CALL} → CALL
+- ✅ HistoryMapper.xml - CONNECT BY → WITH RECURSIVE
+- ✅ ProductRepositoryImpl.java - 5개 메서드 (SYSDATE, ROWNUM, MINUS, (+), NEXTVAL)
+- ✅ DailySummaryRepository.java - DBMS_MVIEW → REFRESH MATERIALIZED VIEW
+- ✅ Stored Procedures/Functions - PostgreSQL로 변환 (DMS + 수동)
+
+## 🔍 주요 변환 내역
+
+| Oracle | PostgreSQL | 비고 |
+|--------|-----------|------|
+| `NUMBER(19)` | `BIGINT` | DMS 자동 변환 |
+| `VARCHAR2(n)` | `VARCHAR(n)` | DMS 자동 변환 |
+| `DATE` | `TIMESTAMP(0)` | DMS 자동 변환 |
+| `CLOB` | `TEXT` | DMS 자동 변환 |
+| `BLOB` | `BYTEA` | DMS 자동 변환 |
+| `XMLType` | `XML` | DMS 자동 변환 |
+| `SYSDATE` | `CURRENT_TIMESTAMP` | 코드 수정 |
+| `ROWNUM` | `LIMIT` | 코드 수정 |
+| `MINUS` | `EXCEPT` | 코드 수정 |
+| `(+)` Outer Join | `LEFT JOIN` | 코드 수정 |
+| `CONNECT BY` | `WITH RECURSIVE` | 코드 수정 |
+| `MERGE` | `INSERT ... ON CONFLICT` | DB + 코드 수정 |
+| `NVL()` | `COALESCE()` | DMS 자동 변환 |
+| `DECODE()` | `CASE WHEN` | DMS 자동 변환 |
+| `FROM DUAL` | 제거 | 코드 수정 |
+| `SEQ.NEXTVAL` | `NEXTVAL('seq')` | 코드 수정 |
+| `DBMS_MVIEW.REFRESH` | `REFRESH MATERIALIZED VIEW` | 코드 수정 |
+
+## 📝 데이터베이스 구조
+
+### 테이블 목록 (9개)
+1. **PRODUCT** - 제품 정보
+2. **PRODUCTION_ORDER** - 작업지시
+3. **ORDER_DETAIL** - 작업지시 상세
+4. **INVENTORY** - 재고 (Optimistic Lock)
+5. **PRODUCTION_HISTORY** - 생산 이력 (계층 구조)
+6. **PRODUCT_DOCUMENT** - 문서 (TEXT)
+7. **PRODUCT_SPEC** - 제품 사양 (XML)
+8. **QUALITY_INSPECTION** - 품질검사 (Partition Table)
+9. **DAILY_SUMMARY** - 일일 요약 (Materialized View)
+
+### Stored Procedures/Functions (4개)
+1. **CALCULATE_ORDER_TOTAL** - 주문 금액 계산
+2. **CHECK_PRODUCT_AVAILABLE** - 재고 확인
+3. **GET_PRODUCT_STATUS** - 제품 상태 조회
+4. **MERGE_INVENTORY** - 재고 UPSERT
+
+## 🎯 마이그레이션 체크리스트
+
+- [x] AWS DMS로 데이터 마이그레이션
+- [x] JDBC 드라이버 변경 (ojdbc → postgresql)
+- [x] Hibernate Dialect 변경
+- [x] MyBatis XML 수정 (FROM DUAL, {CALL})
+- [x] CONNECT BY → WITH RECURSIVE 변환
+- [x] Native Query 수정 (SYSDATE, ROWNUM, MINUS, (+))
+- [x] Materialized View Refresh 문법 변경
+- [x] Stored Procedure/Function 검증
+- [x] 통합 테스트 실행
+- [x] API 엔드포인트 테스트
+
+## 🔗 관련 저장소
+
+- **원본 (Oracle)**: https://github.com/dongkoo81/oracle-postgresql-migration
+- **마이그레이션 (PostgreSQL)**: https://github.com/dongkoo81/oracle-postgresql-mig-app
+
+## 📌 참고 사항
+
+### PostgreSQL 특이사항
+- **Materialized View**: 자동 갱신 기능 없음 (수동 REFRESH 필요)
+- **Partition Table**: `PARTITION()` 문법 지원 (자동 파티션 프루닝)
+- **Sequence**: `NEXTVAL('seq_name')` 함수 형태로 호출
+- **TO_DATE**: 날짜만 반환 (시간 00:00:00)
+
+### 성능 최적화
+- Connection Pool: HikariCP (기본 설정)
+- QueryDSL: 동적 쿼리 최적화
+- Partition Pruning: WHERE 조건으로 자동 활성화
+
+## 📧 문의
+
+프로젝트 관련 문의사항은 GitHub Issues를 이용해주세요.
